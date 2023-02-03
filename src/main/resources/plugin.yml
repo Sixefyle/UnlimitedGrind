@@ -1,0 +1,24 @@
+name: UnlimitedGrind
+version: 0.1
+main: be.sixefyle.UnlimitedGrind
+description: An example plugin
+author: Sixefyle
+api-version: 1.19
+depend: [Vault, IridiumSkyblock]
+softdepend: [RealScoreboard]
+commands:
+  ugreload:
+    description: Reload UG Core plugin
+    aliases:
+      - ureload
+      - urel
+    permission: ug.admin
+    permission-message: You do not have permission!
+    usage: /ugreload
+  power:
+    description: Power commands
+    aliases:
+      - pow
+    permission: ug.admin
+    permission-message: You do not have permission!
+    usage: /power help
