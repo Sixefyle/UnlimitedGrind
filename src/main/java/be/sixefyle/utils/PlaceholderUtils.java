@@ -1,6 +1,8 @@
 package be.sixefyle.utils;
 
 import be.sixefyle.BetterSpawner;
+import be.sixefyle.items.passifs.ItemPassif;
+import be.sixefyle.items.UGItem;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Damageable;
@@ -11,6 +13,7 @@ public class PlaceholderUtils {
     public static String replace(BetterSpawner betterSpawner, String s){
         double power = betterSpawner.getPower();
         s = s.replaceAll("%power%", String.format(Locale.ENGLISH, "%,.0f", power));
+        s = s.replaceAll("%fPower%", NumberUtils.format(power));
         s = s.replaceAll("%amount%", NumberUtils.format(betterSpawner.getStackAmount()));
         s = s.replaceAll("%maxAmount%", NumberUtils.format(betterSpawner.getMaxStackAmount()));
 
@@ -30,6 +33,7 @@ public class PlaceholderUtils {
 
         s = s.replaceAll("%mobType%", StringUtils.capitalize(betterSpawner.getSpawner().getSpawnedType().name().toLowerCase()));
 
+        s = s.replaceAll("_", " ");
         s = IridiumColorAPI.process(s);
         return s;
     }
@@ -42,6 +46,18 @@ public class PlaceholderUtils {
         if(entity.hasMetadata("power"))
             s = s.replaceAll("%power%", NumberUtils.format(entity.getMetadata("power").get(0).asDouble()));
 
+        s = IridiumColorAPI.process(s);
+        return s;
+    }
+
+    public static String replace(UGItem ugItem, String s){
+        s = s.replaceAll("%power%", NumberUtils.format(ugItem.getPower()));
+
+        s = IridiumColorAPI.process(s);
+        return s;
+    }
+
+    public static String replace(ItemPassif passif, String s){
         s = IridiumColorAPI.process(s);
         return s;
     }

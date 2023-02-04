@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -24,12 +25,14 @@ public class CombatListener implements Listener {
             double newDamage = e.getFinalDamage() + (e.getFinalDamage() * powerEfficiency * ugPlayer.getPower());
 
             e.setDamage(newDamage);
-
-            Location damageIndicatorLoc = e.getEntity().getLocation().clone();
-            damageIndicatorLoc.add(0,2,0);
-
-            HologramUtils.createTimed(damageIndicatorLoc, NumberUtils.format(newDamage), 60);
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void createFloatingDamage(EntityDamageByEntityEvent e){
+        Location damageIndicatorLoc = e.getEntity().getLocation().clone();
+        damageIndicatorLoc.add(0,2,0);
+        HologramUtils.createTimed(damageIndicatorLoc, NumberUtils.format(e.getDamage()), 60);
     }
 
     @EventHandler

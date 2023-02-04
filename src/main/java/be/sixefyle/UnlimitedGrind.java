@@ -3,6 +3,7 @@ package be.sixefyle;
 import be.sixefyle.commands.PowerCommand;
 import be.sixefyle.commands.ReloadCommand;
 import be.sixefyle.enums.Symbols;
+import be.sixefyle.items.ItemManager;
 import be.sixefyle.listeners.BasicListeners;
 import be.sixefyle.listeners.BlockGeneratorListener;
 import be.sixefyle.listeners.CombatListener;
@@ -48,6 +49,7 @@ public class UnlimitedGrind extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new CombatListener(), this);
         Bukkit.getPluginManager().registerEvents(new BlockGeneratorListener(), this);
         Bukkit.getPluginManager().registerEvents(new SpawnerListener(), this);
+        Bukkit.getPluginManager().registerEvents(new ItemManager(), this);
 
         getCommand("ugreload").setExecutor(new ReloadCommand());
         getCommand("power").setExecutor(new PowerCommand());
@@ -168,10 +170,14 @@ public class UnlimitedGrind extends JavaPlugin {
         config.addDefault("lang.spawner.error.noEggs", "&cYou need to have an egg with the same type of the spawner!");
         config.addDefault("lang.spawner.error.minSpeedReached", "&cThe minimum spawner speed as been reached!");
         config.addDefault("lang.spawner.error.maxStackUpgradeReached", "&cThe maximum spawner stack as been reached!");
+        config.addDefault("lang.spawner.error.maxRareDropChance", "&cThe maximum rare drop chance as been reached!");
 
         config.set("creature.health", "&a" + Symbols.HEALTH.get() + " &a%currentHealth%&7/%maxHealth%");
-        config.set("creature.power", "&c" + Symbols.POWER.get() + " &c%power%");
+        config.set("creature.power", "&c" + Symbols.POWER.get() + " %power%");
         config.set("creature.amount", "&ex%amount%");
+
+        config.set("spawner.title.typeAndPower", "%mobType% - &c" + Symbols.POWER.get() + " %fPower%");
+        config.set("spawner.title.amount", "&e%amount%&7/%maxAmount%");
 
         //getLogger().severe("Down here \\/");
         //getLogger().severe(config.getConfigurationSection("lang.spawner.gui").getKeys(true) + "");

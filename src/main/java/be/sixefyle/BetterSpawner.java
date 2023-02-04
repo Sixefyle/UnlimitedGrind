@@ -1,11 +1,17 @@
 package be.sixefyle;
 
+import be.sixefyle.utils.PlaceholderUtils;
 import com.iridium.iridiumskyblock.database.Island;
+import me.filoghost.holographicdisplays.api.hologram.Hologram;
+import me.filoghost.holographicdisplays.api.hologram.line.HologramLine;
+import me.filoghost.holographicdisplays.api.hologram.line.TextHologramLine;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.CreatureSpawner;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
-import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
 
@@ -21,8 +27,16 @@ public class BetterSpawner {
     private Island island;
     private boolean isSilence;
     private double rareDropChance;
+    private double maxRareDropChance = 5.0;
 
     private CreatureSpawner spawner;
+    private Hologram hologramTitle;
+
+    private void init(Location loc){
+        initSpawner(loc);
+        initHologramTitle();
+        spawners.put(loc, this);
+    }
 
     public BetterSpawner(EntityType entityType, Island island, Location loc) {
         this.stackAmount = 1;
@@ -33,11 +47,10 @@ public class BetterSpawner {
         this.rareDropChance = 0.0;
         this.stackUpgradeLevel = 0;
 
-        spawner = initSpawner(loc);
-        spawners.put(loc, this);
+        init(loc);
     }
 
-    public BetterSpawner(int maxStackAmount, int stackAmount, int maxStackUpgradeLevel, int stackUpgradeLevel, double power, boolean isSilence, double rareDropChance) {
+    public BetterSpawner(int maxStackAmount, int stackAmount, int maxStackUpgradeLevel, int stackUpgradeLevel, double power, boolean isSilence, double rareDropChance, Location loc, Island island, EntityType entityType) {
         this.maxStackAmount = maxStackAmount;
         this.stackAmount = stackAmount;
         this.maxStackUpgradeLevel = maxStackUpgradeLevel;
@@ -45,28 +58,55 @@ public class BetterSpawner {
         this.power = power;
         this.isSilence = isSilence;
         this.rareDropChance = rareDropChance;
+        this.island = island;
+        this.entityType = entityType;
+
+        init(loc);
     }
 
-    public CreatureSpawner initSpawner(Location loc){
-        CreatureSpawner spawner = (CreatureSpawner) loc.getBlock().getState();
+    public void initSpawner(Location loc){
+        spawner = (CreatureSpawner) loc.getBlock().getState();
         spawner.setSpawnedType(entityType);
-        spawner.setMetadata("power", new FixedMetadataValue(UnlimitedGrind.getInstance(), power));
-        spawner.setMetadata("amount", new FixedMetadataValue(UnlimitedGrind.getInstance(), stackAmount));
-        spawner.setMetadata("silenceMode", new FixedMetadataValue(UnlimitedGrind.getInstance(), false));
+        spawner.setRequiredPlayerRange(50);
         spawner.update();
-        return spawner;
+    }
+
+    public void initHologramTitle(){
+        Location loc = spawner.getLocation().toCenterLocation().clone();
+        FileConfiguration config = UnlimitedGrind.getInstance().getConfig();
+        loc = loc.add(0,1,0);
+        hologramTitle = UnlimitedGrind.getHolographicApi().createHologram(loc);
+        BetterSpawner betterSpawner = this;
+
+        String firstLine = config.getString("spawner.title.typeAndPower");
+        String secondLine = config.getString("spawner.title.amount");
+        TextHologramLine typeAndPowerLine = hologramTitle.getLines().appendText(firstLine);
+        TextHologramLine amountLine = hologramTitle.getLines().appendText(secondLine);
+
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if(!spawner.getBlock().getType().equals(Material.SPAWNER)) {
+                    hologramTitle.delete();
+                    cancel();
+                    return;
+                }
+                typeAndPowerLine.setText(PlaceholderUtils.replace(betterSpawner, firstLine));
+                amountLine.setText(PlaceholderUtils.replace(betterSpawner, secondLine));
+            }
+        }.runTaskTimer(UnlimitedGrind.getInstance(), 0, 100);
     }
 
     public void addPower(double power){
         this.power += power;
-        spawner.setMetadata("power", new FixedMetadataValue(UnlimitedGrind.getInstance(), this.power));
     }
 
     public int getStackAmount() {
         return stackAmount;
     }
 
-    public EntityType getEntityType() {
+    private EntityType getEntityType() {
         return entityType;
     }
 
@@ -88,7 +128,6 @@ public class BetterSpawner {
 
     public void setSilenceMode(boolean silence) {
         isSilence = silence;
-        spawner.setMetadata("silenceMode", new FixedMetadataValue(UnlimitedGrind.getInstance(), silence));
     }
 
     public void invertSilenceMode() {
@@ -101,7 +140,6 @@ public class BetterSpawner {
 
     public void setMaxStackAmount(int maxStackAmount) {
         this.maxStackAmount = maxStackAmount;
-        spawner.setMetadata("maxAmount", new FixedMetadataValue(UnlimitedGrind.getInstance(), maxStackAmount));
     }
 
     public void addMaxStackAmount(int amount){
@@ -115,7 +153,6 @@ public class BetterSpawner {
     public boolean addStackAmount(int amount) {
         if(canAddStackAmount()){
             stackAmount += amount;
-            spawner.setMetadata("amount", new FixedMetadataValue(UnlimitedGrind.getInstance(), stackAmount));
             return true;
         }
         return false;
@@ -129,9 +166,20 @@ public class BetterSpawner {
         return rareDropChance;
     }
 
+    public boolean canAddDropChance(){
+        return rareDropChance < maxRareDropChance;
+    }
+
+    public boolean addRareDropChance(){
+        if(canAddDropChance()) {
+            rareDropChance += .1;
+            return true;
+        }
+        return false;
+    }
+
     public void addStackUpgradeLevel(int amount){
         this.stackUpgradeLevel += amount;
-        spawner.setMetadata("stackUpgradeLevel", new FixedMetadataValue(UnlimitedGrind.getInstance(), this.stackUpgradeLevel));
         addMaxStackAmount(amount);
     }
 

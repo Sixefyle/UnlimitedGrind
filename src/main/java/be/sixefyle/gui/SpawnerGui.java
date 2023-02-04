@@ -122,7 +122,9 @@ public class SpawnerGui extends GUI {
                     errorMessage = config.getString("lang.spawner.error.maxStackUpgradeReached");
                 }
             } else if(itemType.equals(icons[5])) { // rare loot upgrade
-
+                if(!betterSpawner.addRareDropChance()) {
+                    errorMessage = config.getString("lang.spawner.error.maxRareDropChance");
+                }
             } else if(itemType.equals(icons[6])) { // pickup
                 ItemStack pickupSpawner = new ItemStack(Material.SPAWNER, 1);
                 ItemMeta pickupSpawnerMeta = pickupSpawner.getItemMeta();
@@ -147,6 +149,7 @@ public class SpawnerGui extends GUI {
                 createNewPersistentDataContainer(pickupSpawnerMeta, "maxStackUpgradeLevel", PersistentDataType.INTEGER, betterSpawner.getMaxStackUpgradeLevel());
                 createNewPersistentDataContainer(pickupSpawnerMeta, "rareDropChance", PersistentDataType.DOUBLE, betterSpawner.getRareDropChance());
                 createNewPersistentDataContainer(pickupSpawnerMeta, "silence", PersistentDataType.BYTE,  (byte) (betterSpawner.isSilence() ?  1 : 0));
+                createNewPersistentDataContainer(pickupSpawnerMeta, "entityType", PersistentDataType.STRING,  betterSpawner.getSpawner().getSpawnedType().name());
 
                 pickupSpawner.setItemMeta(pickupSpawnerMeta);
 
