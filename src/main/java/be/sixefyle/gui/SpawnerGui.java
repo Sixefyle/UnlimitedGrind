@@ -126,6 +126,7 @@ public class SpawnerGui extends GUI {
                     errorMessage = config.getString("lang.spawner.error.maxRareDropChance");
                 }
             } else if(itemType.equals(icons[6])) { // pickup
+                //TODO: move this code to better spawner class
                 ItemStack pickupSpawner = new ItemStack(Material.SPAWNER, 1);
                 ItemMeta pickupSpawnerMeta = pickupSpawner.getItemMeta();
 

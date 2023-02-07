@@ -87,8 +87,6 @@ public class SpawnerListener implements Listener {
                     boolean isSilence = getPersistantContainer(itemMeta, "silence", PersistentDataType.BYTE) == 1;
                     EntityType entityType = EntityType.valueOf(getPersistantContainer(itemMeta, "entityType", PersistentDataType.STRING));
 
-                    Bukkit.broadcast(Component.text(entityType.name()));
-
                     new BetterSpawner(maxAmount, amount, maxStackUpgradeLevel, stackUpgradeLevel,
                             power, isSilence, rareDropChance, block.getLocation(), island.get(), entityType);
                 } else {
@@ -118,7 +116,7 @@ public class SpawnerListener implements Listener {
         if (nearestCreature == null) {
             Damageable ent = (Damageable) spawner.getWorld().spawnEntity(loc, spawner.getSpawnedType());
             double newHealth = ent.getMaxHealth() +
-                    Math.pow(spawnerPower, UnlimitedGrind.getInstance().getConfig().getDouble("power.efficiency"));
+                    Math.pow(spawnerPower, 1.29912);
 
             ent.setMaxHealth(newHealth);
             ent.setHealth(newHealth);

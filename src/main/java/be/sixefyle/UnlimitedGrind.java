@@ -1,6 +1,7 @@
 package be.sixefyle;
 
 import be.sixefyle.commands.PowerCommand;
+import be.sixefyle.commands.RandomItemCommand;
 import be.sixefyle.commands.ReloadCommand;
 import be.sixefyle.enums.Symbols;
 import be.sixefyle.items.ItemManager;
@@ -8,6 +9,13 @@ import be.sixefyle.listeners.BasicListeners;
 import be.sixefyle.listeners.BlockGeneratorListener;
 import be.sixefyle.listeners.CombatListener;
 import be.sixefyle.listeners.SpawnerListener;
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
+import com.comphenix.protocol.events.ListenerPriority;
+import com.comphenix.protocol.events.PacketAdapter;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.events.PacketEvent;
 import com.google.common.collect.ImmutableMap;
 import com.iridium.iridiumcore.Item;
 import com.iridium.iridiumcore.dependencies.xseries.XMaterial;
@@ -20,6 +28,7 @@ import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -33,11 +42,12 @@ public class UnlimitedGrind extends JavaPlugin {
     }
     private static Economy econ = null;
     private static HolographicDisplaysAPI holoApi = null;
-
+    private ProtocolManager protocolManager;
 
     @Override
     public void onEnable() {
         super.onEnable();
+        protocolManager = ProtocolLibrary.getProtocolManager();
         initConfig();
         initHologramAPI();
         if (!setupEconomy() ) {
@@ -53,16 +63,30 @@ public class UnlimitedGrind extends JavaPlugin {
 
         getCommand("ugreload").setExecutor(new ReloadCommand());
         getCommand("power").setExecutor(new PowerCommand());
+        getCommand("randomgive").setExecutor(new RandomItemCommand());
 
         initNewUpgrade();
+
+        //Hearth damage indicator disabler
+        protocolManager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Server.WORLD_PARTICLES) {
+            @Override
+            public void onPacketSending(PacketEvent event) {
+                PacketContainer packet = event.getPacket();
+                if (event.getPacketType() != PacketType.Play.Server.WORLD_PARTICLES)
+                    return;
+
+                if (packet.getNewParticles().read(0).getParticle() == Particle.DAMAGE_INDICATOR)
+                    event.setCancelled(true);
+            }
+        });
     }
 
     public void initConfig(){
         FileConfiguration config = this.getConfig();
         saveDefaultConfig();
 
-        config.set("power.efficiency", 1.00002);
-        config.set("power.efficiencyDamage", 1.00045f);
+        config.set("power.efficiency", 1.29912);
+        config.set("power.efficiencyDamage", 1.06912);
         config.set("power.currencyConvertion", 1.000761);
 
         config.set("lang.spawner.gui.pickup.material", Material.BARRIER.name());
@@ -178,6 +202,28 @@ public class UnlimitedGrind extends JavaPlugin {
 
         config.set("spawner.title.typeAndPower", "%mobType% - &c" + Symbols.POWER.get() + " %fPower%");
         config.set("spawner.title.amount", "&e%amount%&7/%maxAmount%");
+
+        config.set("lang.item.name", "%rarity% %name%");
+        config.set("lang.item.power", "&7Item Power: &c" + Symbols.POWER.get() + "%power%");
+
+        config.set("itemPassif.moreDamage.strength", 1.25);
+        config.set("itemPassif.moreDamage.name", "&6More Damage");
+        config.set("itemPassif.moreDamage.lore", new ArrayList<>() {{
+            add("&7Increase all damage by &e%strength%%&7");
+        }});
+
+        config.set("itemPassif.explosion.strength", 1.40);
+        config.set("itemPassif.explosion.name", "&6Explosion");
+        config.set("itemPassif.explosion.lore", new ArrayList<>() {{
+            add("&7Create an explosion on your target damaging all");
+            add("&7creature on 5 blocks for &e%strength%%&7 of the damage you dealt");
+        }});
+
+        config.set("itemPassif.damageReduction.strength", 1.05);
+        config.set("itemPassif.damageReduction.name", "&6Rock Solide");
+        config.set("itemPassif.damageReduction.lore", new ArrayList<>() {{
+            add("&7Reduce all incoming damage by &e%strength%%");
+        }});
 
         //getLogger().severe("Down here \\/");
         //getLogger().severe(config.getConfigurationSection("lang.spawner.gui").getKeys(true) + "");

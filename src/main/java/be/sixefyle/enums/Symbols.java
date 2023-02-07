@@ -7,6 +7,7 @@ public enum Symbols {
     HEALTH("❤"),
     COIN("\uD83D\uDCB5"),
     CRYSTALS("⟡"),
+    CRITICS("⚡"),
     ;
 
     private String symbol;

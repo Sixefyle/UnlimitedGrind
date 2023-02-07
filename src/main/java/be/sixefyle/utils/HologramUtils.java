@@ -3,6 +3,7 @@ package be.sixefyle.utils;
 import be.sixefyle.UnlimitedGrind;
 import me.filoghost.holographicdisplays.api.hologram.Hologram;
 import me.filoghost.holographicdisplays.api.hologram.line.TextHologramLine;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Damageable;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -15,10 +16,10 @@ public class HologramUtils {
 
     public static int index = 0;
 
-    public static void createTimed(Location loc, List<String> text, int ticks){
+    public static void createTimed(Location loc, List<String> text, ChatColor color, int ticks){
         Hologram hologram = UnlimitedGrind.getHolographicApi().createHologram(loc);
         for(String line : text){
-            hologram.getLines().appendText(line);
+            hologram.getLines().appendText(color + line);
         }
 
         new BukkitRunnable() {
@@ -30,8 +31,8 @@ public class HologramUtils {
         }.runTaskLater(UnlimitedGrind.getInstance(), ticks);
     }
 
-    public static void createTimed(Location loc, String line, int ticks){
-        createTimed(loc, new ArrayList<>(Collections.singleton(line)), ticks);
+    public static void createTimed(Location loc, String line, ChatColor color, int ticks){
+        createTimed(loc, new ArrayList<>(Collections.singleton(line)), color, ticks);
     }
 
     public static void createEntInfoFollow(Damageable entityToFollow){

@@ -1,7 +1,7 @@
-package be.sixefyle.items.passifs;
+package be.sixefyle.items.passifs.interfaces;
 
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
-public interface OnHit {
+public interface OnMeleeHit {
     void doDamage(EntityDamageByEntityEvent e);
 }

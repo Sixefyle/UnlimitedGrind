@@ -1,6 +1,8 @@
 package be.sixefyle.listeners;
 
 import be.sixefyle.UGPlayer;
+import be.sixefyle.items.ItemManager;
+import be.sixefyle.items.Rarity;
 import be.sixefyle.items.UGItem;
 import be.sixefyle.items.passifs.Passif;
 import org.bukkit.Material;
@@ -22,9 +24,6 @@ public class BasicListeners implements Listener {
         if (UGPlayer.playerMap.get(player) == null) {
             new UGPlayer(e.getPlayer());
         }
-
-        UGItem testItem = new UGItem(Material.IRON_SWORD, "Test Passif", null, 0, new ArrayList<>(){{ add(Passif.DOUBLE_DAMAGE); }});
-        player.getInventory().addItem(testItem.getItem());
     }
 
     @EventHandler

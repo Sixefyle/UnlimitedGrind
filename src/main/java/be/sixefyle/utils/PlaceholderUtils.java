@@ -4,12 +4,19 @@ import be.sixefyle.BetterSpawner;
 import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.UGItem;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
+import net.kyori.adventure.text.Component;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.entity.Damageable;
 
 import java.util.Locale;
 
 public class PlaceholderUtils {
+    public static String replace(String s){
+        s = s.replaceAll("_", " ");
+        s = IridiumColorAPI.process(s);
+        return s;
+    }
+
     public static String replace(BetterSpawner betterSpawner, String s){
         double power = betterSpawner.getPower();
         s = s.replaceAll("%power%", String.format(Locale.ENGLISH, "%,.0f", power));
@@ -33,9 +40,7 @@ public class PlaceholderUtils {
 
         s = s.replaceAll("%mobType%", StringUtils.capitalize(betterSpawner.getSpawner().getSpawnedType().name().toLowerCase()));
 
-        s = s.replaceAll("_", " ");
-        s = IridiumColorAPI.process(s);
-        return s;
+        return replace(s);
     }
 
     public static String replace(Damageable entity, String s){
@@ -46,19 +51,27 @@ public class PlaceholderUtils {
         if(entity.hasMetadata("power"))
             s = s.replaceAll("%power%", NumberUtils.format(entity.getMetadata("power").get(0).asDouble()));
 
-        s = IridiumColorAPI.process(s);
-        return s;
+        return replace(s);
     }
 
     public static String replace(UGItem ugItem, String s){
-        s = s.replaceAll("%power%", NumberUtils.format(ugItem.getPower()));
+        s = s.replaceAll("%power%", String.format(Locale.ENGLISH, "%,.0f", ugItem.getPower()));
+        s = s.replaceAll("%rarity%", ugItem.getRarity().getColor() + ugItem.getRarity().getName());
 
-        s = IridiumColorAPI.process(s);
-        return s;
+        String name = ugItem.getName();
+        if(name != null) {
+            s = s.replaceAll("%name%", name);
+        } else {
+            s = s.replaceAll("%name%", StringUtils.capitalize(ugItem.getItem().getType().toString().toLowerCase()));
+        }
+
+        return replace(s);
     }
 
-    public static String replace(ItemPassif passif, String s){
-        s = IridiumColorAPI.process(s);
-        return s;
+    public static String replace(ItemPassif passif, boolean isItemMythic, String s){
+        s = s.replaceAll("%strength%", String.format(Locale.ENGLISH, "%,.0f",
+                passif.getStrength() + (isItemMythic ? passif.getMythicBonus() : 0)));
+
+        return replace(s);
     }
 }

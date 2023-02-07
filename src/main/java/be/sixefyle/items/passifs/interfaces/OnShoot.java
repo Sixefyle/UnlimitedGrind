@@ -1,4 +1,4 @@
-package be.sixefyle.items.passifs;
+package be.sixefyle.items.passifs.interfaces;
 
 import org.bukkit.event.entity.EntityShootBowEvent;
 
