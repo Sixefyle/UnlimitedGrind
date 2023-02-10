@@ -5,5 +5,6 @@ public enum ItemCategory {
     DISTANCE(),
     ARMOR(),
     MELEE_DISTANCE(),
+    SHIELD(),
     ;
 }

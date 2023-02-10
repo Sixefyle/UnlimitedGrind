@@ -6,6 +6,8 @@ import be.sixefyle.items.passifs.Passif;
 import be.sixefyle.utils.NumberUtils;
 import be.sixefyle.utils.PlaceholderUtils;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
+import com.iridium.iridiumcore.dependencies.nbtapi.NBTItem;
+import it.unimi.dsi.fastutil.Hash;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -15,10 +17,9 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scoreboard.Objective;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class UGItem {
     private ItemStack item;
@@ -97,54 +98,70 @@ public class UGItem {
 
 
         DropTable dropTableItem = DropTable.valueOf(item.getType().name());
-        if(dropTableItem.getItemCategory().equals(ItemCategory.MELEE)) {
+        ItemCategory dropTableItemCategory = dropTableItem.getItemCategory();
+        if(dropTableItemCategory.equals(ItemCategory.MELEE)) {
             double weapDamage = Math.pow(getPower(), UnlimitedGrind.getInstance().getConfig().getDouble("power.efficiencyDamage"));
 
             AttributeModifier damage = new AttributeModifier(UUID.randomUUID(),
-                    "generic.attackDamage", weapDamage, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
+                    "generic.attack_damage", weapDamage, AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
             itemMeta.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE, damage);
 
             AttributeModifier attack_speed = new AttributeModifier(UUID.randomUUID(),
-                    "generic.attackSpeed", NumberUtils.getRandomNumber(0.3, 3), AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
+                    "generic.attack_speed", NumberUtils.getRandomNumber(0.3, 3), AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
             itemMeta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED, attack_speed);
 
-            List<Attribute> attributeList = new ArrayList<>() {{
-                add(Attribute.GENERIC_ATTACK_DAMAGE);
-                add(Attribute.GENERIC_ATTACK_SPEED);
-                add(Attribute.GENERIC_KNOCKBACK_RESISTANCE);
-                add(Attribute.GENERIC_ATTACK_KNOCKBACK);
-                add(Attribute.GENERIC_MOVEMENT_SPEED);
+            HashMap<Attribute, Double> attributeList = new HashMap<>() {{
+                put(Attribute.GENERIC_ATTACK_DAMAGE, .25);
+                put(Attribute.GENERIC_ATTACK_SPEED, .5);
+                put(Attribute.GENERIC_KNOCKBACK_RESISTANCE, .1);
+                put(Attribute.GENERIC_ATTACK_KNOCKBACK, .2);
+                put(Attribute.GENERIC_MOVEMENT_SPEED, .1);
             }};
-            addRandomAttributes(attributeList, itemMeta, dropTableItem.getSlot(), .15);
+            addRandomAttributes(attributeList, itemMeta, dropTableItem.getSlot());
 
-        } else if(dropTableItem.getItemCategory().equals(ItemCategory.ARMOR)) {
+        } else if(dropTableItemCategory.equals(ItemCategory.ARMOR) || dropTableItemCategory.equals(ItemCategory.SHIELD)) {
+            boolean isShield = dropTableItemCategory.equals(ItemCategory.SHIELD);
             double armorResistance = Math.pow(getPower(), 0.4912);
 
             AttributeModifier armor = new AttributeModifier(UUID.randomUUID(),
                     "generic.armor", armorResistance, AttributeModifier.Operation.ADD_NUMBER, dropTableItem.getSlot());
             itemMeta.addAttributeModifier(Attribute.GENERIC_ARMOR, armor);
 
-            List<Attribute> attributeList = new ArrayList<>() {{
-               add(Attribute.GENERIC_ARMOR_TOUGHNESS);
-               add(Attribute.GENERIC_MAX_HEALTH);
-               add(Attribute.GENERIC_MOVEMENT_SPEED);
-               add(Attribute.GENERIC_KNOCKBACK_RESISTANCE);
-               add(Attribute.GENERIC_ATTACK_DAMAGE);
+            HashMap<Attribute, Double> attributeList = new HashMap<>() {{
+               put(Attribute.GENERIC_ARMOR_TOUGHNESS, .25);
+               put(Attribute.GENERIC_MAX_HEALTH, isShield ? .25 : .1);
+               put(Attribute.GENERIC_MOVEMENT_SPEED, .05);
+               put(Attribute.GENERIC_KNOCKBACK_RESISTANCE, isShield ? 1 : .1);
+               put(Attribute.GENERIC_ATTACK_DAMAGE, isShield ? .1 : .2);
             }};
-            addRandomAttributes(attributeList, itemMeta, dropTableItem.getSlot(), .25);
+            addRandomAttributes(attributeList, itemMeta, dropTableItem.getSlot());
         }
 
         item.setItemMeta(itemMeta);
+
+        NBTItem nbtItem = new NBTItem(item);
+        System.out.println(nbtItem);
     }
 
-    private void addRandomAttributes(List<Attribute> attributeList, ItemMeta itemMeta, EquipmentSlot slot, double maxPercent){
+    private void addRandomAttributes(HashMap<Attribute, Double> attributeMap, ItemMeta itemMeta, EquipmentSlot slot){
         AttributeModifier randomArmorAttribute;
+        Random random = new Random();
+        Set<Attribute> attributeSet = attributeMap.keySet();
+        List<Attribute> attributeList = new ArrayList<>(attributeSet);
+        Attribute key;
+        Double value;
+        int index;
         for (int i = 0; i < rarity.getBonusAttributeAmount(); i++) {
+            index = random.nextInt(attributeList.size());
+            key = attributeList.get(index);
+            value = attributeMap.get(key);
+
             randomArmorAttribute = new AttributeModifier(UUID.randomUUID(),
-                    "random.attribute." + i, Math.random() * maxPercent, AttributeModifier.Operation.MULTIPLY_SCALAR_1, slot);
-            Attribute attribute = attributeList.get((int) (Math.random()*attributeList.size()));
-            itemMeta.addAttributeModifier(attribute, randomArmorAttribute);
-            attributeList.remove(attribute);
+                    "random.attribute." + i, Math.random() * value, AttributeModifier.Operation.MULTIPLY_SCALAR_1, slot);
+
+            itemMeta.addAttributeModifier(key, randomArmorAttribute);
+
+            attributeList.remove(key);
         }
     }
 

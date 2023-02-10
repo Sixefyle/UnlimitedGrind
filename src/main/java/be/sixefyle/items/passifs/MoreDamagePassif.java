@@ -19,17 +19,15 @@ public class MoreDamagePassif extends ItemPassif implements OnMeleeHit, OnProjec
     }
 
     @Override
-    public void doDamage(EntityDamageByEntityEvent e) {
-        if(e.getDamager() instanceof Player player){
-            ItemStack item = player.getInventory().getItemInMainHand();
-            double mythicBonusDamage = UGItem.isMythic(item) ? 0 : getMythicBonus();
+    public void doDamage(EntityDamageByEntityEvent e, Player player) {
+        ItemStack item = player.getInventory().getItemInMainHand();
+        double mythicBonusDamage = UGItem.isMythic(item) ? 0 : getMythicBonus();
 
-            e.setDamage(e.getFinalDamage() * (getStrength() + mythicBonusDamage));
-        }
+        e.setDamage(e.getFinalDamage() * (getStrength() + mythicBonusDamage));
     }
 
     @Override
-    public void onHit(ProjectileHitEvent e) {
+    public void onHit(ProjectileHitEvent e, Player player) {
 
     }
 }

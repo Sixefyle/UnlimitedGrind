@@ -70,7 +70,7 @@ public class PlaceholderUtils {
 
     public static String replace(ItemPassif passif, boolean isItemMythic, String s){
         s = s.replaceAll("%strength%", String.format(Locale.ENGLISH, "%,.0f",
-                passif.getStrength() + (isItemMythic ? passif.getMythicBonus() : 0)));
+                passif.getReadableStrength() + (isItemMythic ? passif.getReadableMythicBonus() : 0)));
 
         return replace(s);
     }

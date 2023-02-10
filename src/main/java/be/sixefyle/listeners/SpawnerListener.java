@@ -6,8 +6,6 @@ import be.sixefyle.gui.SpawnerGui;
 import be.sixefyle.utils.HologramUtils;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import com.iridium.iridiumskyblock.database.Island;
-import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -16,10 +14,8 @@ import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.SpawnerSpawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -122,7 +118,7 @@ public class SpawnerListener implements Listener {
             ent.setHealth(newHealth);
             ent.setSilent(betterSpawner.isSilence());
 
-            HologramUtils.createEntInfoFollow(ent);
+            HologramUtils.createEntInfoFollowAmount(ent);
 
             ent.setCustomNameVisible(false);
             ent.setMetadata("power", new FixedMetadataValue(UnlimitedGrind.getInstance(), spawnerPower));

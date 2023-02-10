@@ -22,16 +22,16 @@ public class ExplodePassif extends ItemPassif implements OnMeleeHit {
     }
 
     @Override
-    public void doDamage(EntityDamageByEntityEvent e) {
+    public void doDamage(EntityDamageByEntityEvent e, Player player) {
         Location loc = e.getEntity().getLocation();
         loc.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, loc,1);
 
-        if(e.getDamager() instanceof Player player){
-            ItemStack item = player.getInventory().getItemInMainHand();
-            double mythicBonusDamage = UGItem.isMythic(item) ? 0 : getMythicBonus();
-            for (LivingEntity nearbyLivingEntity : loc.getNearbyLivingEntities(5)) {
-                nearbyLivingEntity.damage(e.getDamage() * getStrength() + mythicBonusDamage);
-            }
+        ItemStack item = player.getInventory().getItemInMainHand();
+        double mythicBonusDamage = UGItem.isMythic(item) ? 0 : getMythicBonus();
+        for (LivingEntity nearbyLivingEntity : loc.getNearbyLivingEntities(5)) {
+            if(nearbyLivingEntity.equals(player)) continue;
+
+            nearbyLivingEntity.damage(e.getDamage() * getStrength() + mythicBonusDamage);
         }
     }
 }

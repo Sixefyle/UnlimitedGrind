@@ -49,18 +49,18 @@ public class CombatListener implements Listener {
         }
 
         Location damageIndicatorLoc = e.getEntity().getLocation().clone();
-        damageIndicatorLoc.add(
-                NumberUtils.getRandomNumber(-0.07, 0.07),
-                NumberUtils.getRandomNumber(1.95, 2.05),
-                NumberUtils.getRandomNumber(-0.07, 0.07)
-        );
 
-        ChatColor color = e.isCritical() ? ChatColor.GOLD : ChatColor.WHITE ;
-        HologramUtils.createTimed(damageIndicatorLoc, (e.isCritical() ? Symbols.CRITICS.get() + " " : "") +
-                NumberUtils.format(e.getDamage()), color, 15);
+        ChatColor color = ChatColor.WHITE;
+        if(e.getDamager() instanceof Player)
+            color = e.isCritical() ? ChatColor.GOLD : ChatColor.WHITE;
+        if(e.getEntity() instanceof Player)
+            color = ChatColor.RED;
+
+        HologramUtils.createDamageIndicator(damageIndicatorLoc, (e.isCritical() ? ChatColor.BOLD + Symbols.CRITICS.get() : "") +
+                NumberUtils.format(e.getFinalDamage()), color);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityAttack(EntityDamageByEntityEvent e){
         if(e.getDamager() instanceof Damageable ent && ent.hasMetadata("power")) {
             double newDamage = Math.pow(ent.getMetadata("power").get(0).asDouble(),

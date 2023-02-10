@@ -225,6 +225,22 @@ public class UnlimitedGrind extends JavaPlugin {
             add("&7Reduce all incoming damage by &e%strength%%");
         }});
 
+        config.set("itemPassif.thunderStorm.strength", 13.5);
+        config.set("itemPassif.thunderStorm.name", "&bThunder Storm");
+        config.set("itemPassif.thunderStorm.lore", new ArrayList<>() {{
+            add("&7Small chance to let rain a thunder storm to all");
+            add("&7nearby creatures dealing &b%strength%%&7 of the armor power");
+        }});
+
+        config.set("itemPassif.lethalBlock.strength", 1.05);
+        config.set("itemPassif.lethalBlock.name", "&6Lethal Block");
+        config.set("itemPassif.lethalBlock.lore", new ArrayList<>() {{
+            add("&7Each time you block an attack you gain");
+            add("&7a &6Lethal Block&7 stack which increase the");
+            add("&7damage by &e%strength%% of received damage&7 for");
+            add("&7each stack until you release the shield");
+        }});
+
         //getLogger().severe("Down here \\/");
         //getLogger().severe(config.getConfigurationSection("lang.spawner.gui").getKeys(true) + "");
         config.options().copyDefaults(true);

@@ -31,6 +31,10 @@ public abstract class ItemPassif {
     }
 
     public double getStrength() {
+        return strength;
+    }
+
+    public double getReadableStrength(){
         if(isStrenghtPercentage) {
             return (strength - 1) * 100;
         }
@@ -38,6 +42,10 @@ public abstract class ItemPassif {
     }
 
     public double getMythicBonus() {
+        return mythicBonus;
+    }
+
+    public double getReadableMythicBonus(){
         if(isStrenghtPercentage) {
             return mythicBonus * 100;
         }
