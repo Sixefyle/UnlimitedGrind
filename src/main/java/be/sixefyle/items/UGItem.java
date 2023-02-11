@@ -107,7 +107,7 @@ public class UGItem {
             itemMeta.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE, damage);
 
             AttributeModifier attack_speed = new AttributeModifier(UUID.randomUUID(),
-                    "generic.attack_speed", NumberUtils.getRandomNumber(0.3, 3), AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
+                    "generic.attack_speed", NumberUtils.getRandomNumber(-3, 3), AttributeModifier.Operation.ADD_NUMBER, EquipmentSlot.HAND);
             itemMeta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED, attack_speed);
 
             HashMap<Attribute, Double> attributeList = new HashMap<>() {{
@@ -138,9 +138,6 @@ public class UGItem {
         }
 
         item.setItemMeta(itemMeta);
-
-        NBTItem nbtItem = new NBTItem(item);
-        System.out.println(nbtItem);
     }
 
     private void addRandomAttributes(HashMap<Attribute, Double> attributeMap, ItemMeta itemMeta, EquipmentSlot slot){

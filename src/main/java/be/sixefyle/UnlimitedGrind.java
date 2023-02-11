@@ -241,6 +241,16 @@ public class UnlimitedGrind extends JavaPlugin {
             add("&7each stack until you release the shield");
         }});
 
+        config.set("itemPassif.deadlyLink.strength", 3);
+        config.set("itemPassif.deadlyLink.name", "&6Deadly Link");
+        config.set("itemPassif.deadlyLink.lore", new ArrayList<>() {{
+            add("&7Once you hit a creature. he's gonna link up to &e%strength% nearby");
+            add("&ecreatures&7 around him for 10sec. Every attack on a");
+            add("&7linked creature gonna deal &e55% of the damage&7 to all");
+            add("&7other linkeds. After 10sec all linkeds creatures will");
+            add("&7explode and dealing &e100% of the shared damages&7");
+        }});
+
         //getLogger().severe("Down here \\/");
         //getLogger().severe(config.getConfigurationSection("lang.spawner.gui").getKeys(true) + "");
         config.options().copyDefaults(true);
