@@ -24,6 +24,8 @@ import java.util.*;
 public class UGItem {
     private ItemStack item;
     private String name;
+    private String prefix;
+    private String suffix;
     private final double power;
     private final Rarity rarity;
     private List<Passif> passifList = new ArrayList<>();
@@ -42,11 +44,13 @@ public class UGItem {
         }
     }
 
-    public UGItem(Material itemType, Rarity rarity, String name, List<String> lore, double power, List<Passif> passifList) {
+    public UGItem(Material itemType, Rarity rarity, String name, String prefix, String suffix, List<String> lore, double power, List<Passif> passifList) {
         this.power = power;
         this.passifList = passifList;
         this.rarity = rarity;
         this.name = name;
+        this.prefix = prefix;
+        this.suffix = suffix;
 
         initItem(itemType, lore);
     }
@@ -129,7 +133,7 @@ public class UGItem {
 
             HashMap<Attribute, Double> attributeList = new HashMap<>() {{
                put(Attribute.GENERIC_ARMOR_TOUGHNESS, .25);
-               put(Attribute.GENERIC_MAX_HEALTH, isShield ? .25 : .1);
+               put(Attribute.GENERIC_MAX_HEALTH, isShield ? .35 : .1);
                put(Attribute.GENERIC_MOVEMENT_SPEED, .05);
                put(Attribute.GENERIC_KNOCKBACK_RESISTANCE, isShield ? 1 : .1);
                put(Attribute.GENERIC_ATTACK_DAMAGE, isShield ? .1 : .2);
@@ -182,6 +186,14 @@ public class UGItem {
         return name;
     }
 
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public String getSuffix() {
+        return suffix;
+    }
+
     public static boolean isMythic(ItemStack item){
         ItemMeta itemMeta = item.getItemMeta();
         NamespacedKey key = new NamespacedKey(UnlimitedGrind.getInstance(), "rarity");
@@ -189,6 +201,33 @@ public class UGItem {
             return itemMeta.getPersistentDataContainer().get(key, PersistentDataType.STRING).equals(Rarity.MYTHIC.name());
         }
         return false;
+    }
+
+    public static void updateItemStackLorePassif(ItemStack item){
+        if(item == null) return;
+
+        ItemMeta itemMeta = item.getItemMeta();
+        UGItem ugItem = UGItem.getFromItemStack(item);
+
+        if(ugItem == null) return;
+
+        List<Component> loreComp = itemMeta.lore();
+
+        boolean isMythic = ugItem.getRarity().equals(Rarity.MYTHIC);
+
+        ItemPassif itemPassif;
+        int passifLineIndex = 2;
+        int descLineIndex = 3;
+        for (Passif passif : ugItem.getPassifList()) {
+            itemPassif = passif.getItemPassif();
+            loreComp.set(passifLineIndex, Component.text(IridiumColorAPI.process(itemPassif.getName() + ": ")));
+            for (String s : itemPassif.getDescription()) {
+                loreComp.set(descLineIndex++, Component.text("   " + PlaceholderUtils.replace(itemPassif, isMythic, s)));
+            }
+        }
+
+        itemMeta.lore(loreComp);
+        item.setItemMeta(itemMeta);
     }
 
     public static UGItem getFromItemStack(ItemStack item){
@@ -205,4 +244,5 @@ public class UGItem {
         }
         return null;
     }
+
 }

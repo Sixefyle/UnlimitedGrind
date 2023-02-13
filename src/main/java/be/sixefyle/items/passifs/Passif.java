@@ -7,6 +7,7 @@ import be.sixefyle.items.passifs.armor.ThunderStormPassif;
 import be.sixefyle.items.passifs.melee.DeadlyLink;
 import be.sixefyle.items.passifs.melee.ExplodePassif;
 import be.sixefyle.items.passifs.melee.LethalBlock;
+import be.sixefyle.items.passifs.melee.LifeConversion;
 
 public enum Passif {
     MORE_DAMAGE(1, new MoreDamagePassif(), ItemCategory.MELEE_DISTANCE),
@@ -15,6 +16,7 @@ public enum Passif {
     THUNDER_STORM(4, new ThunderStormPassif(), ItemCategory.ARMOR, Rarity.MYTHIC),
     LETHAL_BLOCK(5, new LethalBlock(), ItemCategory.SHIELD),
     DEADLY_LINK(6, new DeadlyLink(), ItemCategory.MELEE),
+    LIFE_CONVERSION(7, new LifeConversion(), ItemCategory.MELEE),
     ;
 
     private ItemPassif passif;

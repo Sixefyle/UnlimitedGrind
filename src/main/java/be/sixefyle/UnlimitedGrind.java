@@ -203,7 +203,7 @@ public class UnlimitedGrind extends JavaPlugin {
         config.set("spawner.title.typeAndPower", "%mobType% - &c" + Symbols.POWER.get() + " %fPower%");
         config.set("spawner.title.amount", "&e%amount%&7/%maxAmount%");
 
-        config.set("lang.item.name", "%rarity% %name%");
+        config.set("lang.item.name", "%rarity% %prefix%%name% %suffix%");
         config.set("lang.item.power", "&7Item Power: &c" + Symbols.POWER.get() + "%power%");
 
         config.set("itemPassif.moreDamage.strength", 1.25);
@@ -234,6 +234,7 @@ public class UnlimitedGrind extends JavaPlugin {
 
         config.set("itemPassif.lethalBlock.strength", 1.05);
         config.set("itemPassif.lethalBlock.name", "&6Lethal Block");
+        config.set("itemPassif.lethalBlock.itemPrefixName", "Green's");
         config.set("itemPassif.lethalBlock.lore", new ArrayList<>() {{
             add("&7Each time you block an attack you gain");
             add("&7a &6Lethal Block&7 stack which increase the");
@@ -250,6 +251,15 @@ public class UnlimitedGrind extends JavaPlugin {
             add("&7other linkeds. After 10sec all linkeds creatures will");
             add("&7explode and dealing &e100% of the shared damages&7");
         }});
+
+        config.set("itemPassif.lifeConversion.strength", 1.015);
+        config.set("itemPassif.lifeConversion.name", "&6Life Conversion");
+        config.set("itemPassif.lifeConversion.itemPrefixName", "Azellio's");
+        config.set("itemPassif.lifeConversion.lore", new ArrayList<>() {{
+            add("&7Reduce your maximum health to &c1 HP&7 and increase");
+            add("&7your damage by &e%strength%% for each HP reduced&7.");
+        }});
+
 
         //getLogger().severe("Down here \\/");
         //getLogger().severe(config.getConfigurationSection("lang.spawner.gui").getKeys(true) + "");

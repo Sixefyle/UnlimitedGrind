@@ -2,10 +2,14 @@ package be.sixefyle.listeners;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
+import be.sixefyle.items.passifs.Passif;
+import be.sixefyle.items.passifs.melee.LifeConversion;
 import be.sixefyle.utils.HologramUtils;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import com.iridium.iridiumskyblock.database.Island;
 import com.iridium.iridiumskyblock.database.User;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
@@ -15,6 +19,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.jetbrains.annotations.NotNull;
 
@@ -67,6 +72,16 @@ public class BasicListeners implements Listener {
             damageable.setMetadata("power", new FixedMetadataValue(UnlimitedGrind.getInstance(), maxPower));
             ((LivingEntity) damageable).setMaximumNoDamageTicks(3);
         }
+    }
 
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent e){
+        Player player = e.getPlayer();
+        for (Attribute value : Attribute.values()) {
+            if(player.getAttribute(value) == null) continue;
+            for (AttributeModifier modifier : player.getAttribute(value).getModifiers()) {
+                player.getAttribute(value).removeModifier(modifier);
+            }
+        }
     }
 }

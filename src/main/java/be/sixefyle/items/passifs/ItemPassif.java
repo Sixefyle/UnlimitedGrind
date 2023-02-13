@@ -8,15 +8,24 @@ public abstract class ItemPassif {
 
     private List<String> description;
     private String name;
+    private String itemPrefixName;
 
     private boolean isStrenghtPercentage;
     private double strength;
     private double mythicBonus;
 
-
     public ItemPassif(String name, List<String> description, double strength, boolean isStrenghtPercentage, double mythicBonus) {
         this.description = description;
         this.name = name;
+        this.strength = strength;
+        this.mythicBonus = mythicBonus;
+        this.isStrenghtPercentage = isStrenghtPercentage;
+    }
+
+    public ItemPassif(String name, String itemPrefixName, List<String> description, double strength, boolean isStrenghtPercentage, double mythicBonus) {
+        this.description = description;
+        this.name = name;
+        this.itemPrefixName = itemPrefixName;
         this.strength = strength;
         this.mythicBonus = mythicBonus;
         this.isStrenghtPercentage = isStrenghtPercentage;
@@ -50,6 +59,10 @@ public abstract class ItemPassif {
             return mythicBonus * 100;
         }
         return mythicBonus;
+    }
+
+    public String getItemPrefixName() {
+        return itemPrefixName;
     }
 }
 

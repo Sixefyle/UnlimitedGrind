@@ -1,11 +1,14 @@
 package be.sixefyle.items;
 
 import be.sixefyle.UnlimitedGrind;
+import be.sixefyle.items.passifs.ItemPassif;
+import be.sixefyle.items.passifs.interfaces.OnEquip;
 import be.sixefyle.items.passifs.interfaces.OnMeleeHit;
 import be.sixefyle.items.passifs.Passif;
 import be.sixefyle.items.passifs.interfaces.OnReceiveDamage;
 import be.sixefyle.utils.NumberUtils;
 import net.kyori.adventure.text.Component;
+import net.md_5.bungee.api.chat.hover.content.Item;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
@@ -15,6 +18,10 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -37,7 +44,7 @@ public class ItemManager implements Listener {
 
     public static UGItem generateRandomItem(ItemCategory itemCategory, double power){
         double minPower = power - (power % 100);
-        double maxPower = minPower + 300;
+        double maxPower = minPower + 100;
         double itemPower = NumberUtils.getRandomNumber(minPower, maxPower);
 
         DropTable itemType = DropTable.values()[(int) (Math.random() * DropTable.values().length)];
@@ -49,6 +56,7 @@ public class ItemManager implements Listener {
 
         Rarity rarity = Rarity.getRandomRarity();
         List<Passif> itemPassifList = new ArrayList<>();
+        String itemPrefix = null;
         if(rarity.equals(Rarity.LEGENDARY) || rarity.equals(Rarity.MYTHIC)){
             Passif passif = Passif.values()[(int) (Math.random() * Passif.values().length)];
             ItemCategory currentPassifCategory = passif.getItemCategory();
@@ -57,11 +65,11 @@ public class ItemManager implements Listener {
                 passif = Passif.values()[(int) (Math.random() * Passif.values().length)];
                 currentPassifCategory = passif.getItemCategory();
             }
-
+            itemPrefix = passif.getItemPassif().getItemPrefixName();
             itemPassifList.add(passif);
         }
 
-        return new UGItem(itemType.getMaterial(), rarity, null, null, itemPower, itemPassifList);
+        return new UGItem(itemType.getMaterial(), rarity, null, itemPrefix, null, null, itemPower, itemPassifList);
     }
 
     public static UGItem generateRandomItem(double power){
@@ -70,16 +78,32 @@ public class ItemManager implements Listener {
         return generateRandomItem(itemCategory, power);
     }
 
+    public static int[] getItemPassifArray(ItemStack item) {
+        if(item == null) return null;
+        ItemMeta itemMeta = item.getItemMeta();
+        NamespacedKey passifsKey = new NamespacedKey(UnlimitedGrind.getInstance(), "passifIdArray");
+        int[] passifIDs = null;
+        if(itemMeta != null && itemMeta.getPersistentDataContainer().has(passifsKey)) {
+            passifIDs = itemMeta.getPersistentDataContainer().get(passifsKey, PersistentDataType.INTEGER_ARRAY);
+        }
+        return passifIDs;
+    }
+
+    @EventHandler
+    public void updateItemLore(PlayerJoinEvent e){
+        Player player = e.getPlayer();
+        for (ItemStack itemStack : player.getInventory()) {
+            UGItem.updateItemStackLorePassif(itemStack);
+        }
+    }
+
     @EventHandler(priority = EventPriority.LOW)
     public void onDoDamage(EntityDamageByEntityEvent e) {
         Entity damager = e.getDamager();
         if(damager instanceof Player player){
             ItemStack item = player.getInventory().getItemInMainHand();
-            ItemMeta itemMeta = item.getItemMeta();
-            NamespacedKey passifsKey = new NamespacedKey(UnlimitedGrind.getInstance(), "passifIdArray");
-            if(itemMeta != null && itemMeta.getPersistentDataContainer().has(passifsKey)) {
-                int[] passifIDs = itemMeta.getPersistentDataContainer().get(passifsKey, PersistentDataType.INTEGER_ARRAY);
-
+            int[] passifIDs = getItemPassifArray(item);
+            if(passifIDs != null){
                 for (int passifID : passifIDs) {
                     if(Passif.getByID(passifID).getItemPassif() instanceof OnMeleeHit onHitPassif){
                         onHitPassif.doDamage(e, player);
@@ -102,10 +126,8 @@ public class ItemManager implements Listener {
             for (ItemStack itemStack : item) {
                 if(itemStack == null) continue;
 
-                ItemMeta itemMeta = itemStack.getItemMeta();
-                NamespacedKey passifsKey = new NamespacedKey(UnlimitedGrind.getInstance(), "passifIdArray");
-                if(itemMeta != null && itemMeta.getPersistentDataContainer().has(passifsKey)) {
-                    int[] passifIDs = itemMeta.getPersistentDataContainer().get(passifsKey, PersistentDataType.INTEGER_ARRAY);
+                int[] passifIDs = getItemPassifArray(itemStack);
+                if(passifIDs != null){
                     for (int passifID : passifIDs) {
                         if(Passif.getByID(passifID).getItemPassif() instanceof OnReceiveDamage onReceiveDamage){
                             onReceiveDamage.onGetDamage(e, player, itemStack);
@@ -114,5 +136,62 @@ public class ItemManager implements Listener {
                 }
             }
         }
+    }
+
+    private static void onEquip(int[] passifIDs, Player player, ItemStack item){
+        if(passifIDs != null){
+            for (int passifID : passifIDs) {
+                if(Passif.getByID(passifID).getItemPassif() instanceof OnEquip onEquip){
+                    onEquip.onEquip(player, item);
+                }
+            }
+        }
+    }
+
+    private static void onUnequip(int[] passifIDs, Player player, ItemStack item){
+        if(passifIDs != null){
+            for (int passifID : passifIDs) {
+                if(Passif.getByID(passifID).getItemPassif() instanceof OnEquip onEquip){
+                    onEquip.onUnequip(player, item);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onChangeHeldItem(PlayerItemHeldEvent e){
+        ItemStack newItem = e.getPlayer().getInventory().getItem(e.getNewSlot());
+        ItemStack oldItem = e.getPlayer().getInventory().getItem(e.getPreviousSlot());
+        int[] passifIDs = getItemPassifArray(newItem);
+        int[] oldItemPassifIDs = getItemPassifArray(oldItem);
+        onEquip(passifIDs, e.getPlayer(), newItem);
+        onUnequip(oldItemPassifIDs, e.getPlayer(), newItem);
+    }
+
+    @EventHandler
+    public void onDropItem(PlayerDropItemEvent e){
+        ItemStack droppedItem = e.getItemDrop().getItemStack();
+        int[] passifIDs = getItemPassifArray(droppedItem);
+        onUnequip(passifIDs, e.getPlayer(), droppedItem);
+    }
+
+    @EventHandler
+    public void doItemPassifOnPlayerJoin(PlayerJoinEvent e){
+        Player player = e.getPlayer();
+        ItemStack heldItem = player.getInventory().getItemInMainHand();
+        int[] passifIDs = getItemPassifArray(heldItem);
+        onEquip(passifIDs, player, heldItem);
+    }
+
+    @EventHandler
+    public void onPickupItem(EntityPickupItemEvent e){
+        // wait 1 tick to be sure that the player have received the item in his inventory
+        Bukkit.getScheduler().runTaskLater(UnlimitedGrind.getInstance(), () -> {
+            if(e.getEntity() instanceof Player player){
+                ItemStack pickedItem = player.getInventory().getItemInMainHand();
+                int[] passifIDs = getItemPassifArray(pickedItem);
+                onEquip(passifIDs, player, pickedItem);
+            }
+        }, 1);
     }
 }

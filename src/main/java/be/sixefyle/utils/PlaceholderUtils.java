@@ -58,6 +58,12 @@ public class PlaceholderUtils {
         s = s.replaceAll("%power%", String.format(Locale.ENGLISH, "%,.0f", ugItem.getPower()));
         s = s.replaceAll("%rarity%", ugItem.getRarity().getColor() + ugItem.getRarity().getName());
 
+        String prefix = ugItem.getPrefix();
+        s = s.replaceAll("%prefix%", prefix != null ? prefix + " " : "");
+
+        String suffix = ugItem.getSuffix();
+        s = s.replaceAll("%suffix%", suffix != null ? suffix : "");
+
         String name = ugItem.getName();
         if(name != null) {
             s = s.replaceAll("%name%", name);

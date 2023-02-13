@@ -32,6 +32,7 @@ public class LethalBlock extends ItemPassif implements OnReceiveDamage, Stackabl
 
     public LethalBlock() {
         super(UnlimitedGrind.getInstance().getConfig().getString("itemPassif.lethalBlock.name"),
+                UnlimitedGrind.getInstance().getConfig().getString("itemPassif.lethalBlock.itemPrefixName"),
                 UnlimitedGrind.getInstance().getConfig().getStringList("itemPassif.lethalBlock.lore"),
                 UnlimitedGrind.getInstance().getConfig().getDouble("itemPassif.lethalBlock.strength"),
                 true,
