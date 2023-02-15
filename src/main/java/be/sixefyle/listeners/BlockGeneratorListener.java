@@ -28,6 +28,8 @@ public class BlockGeneratorListener implements Listener {
         UGIsland ugIsland = UGIsland.getIsland(island);
         Location loc = e.getBlock().getLocation();
 
+        if(ugIsland == null) return;
+
         if(!ugIsland.getGeneratorsLoc().contains(loc)){
             ugIsland.addGenerator(loc);
         } else {

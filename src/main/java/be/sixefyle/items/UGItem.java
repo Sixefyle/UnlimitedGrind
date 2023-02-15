@@ -7,6 +7,8 @@ import be.sixefyle.utils.NumberUtils;
 import be.sixefyle.utils.PlaceholderUtils;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
 import com.iridium.iridiumcore.dependencies.nbtapi.NBTItem;
+import com.iridium.iridiumskyblock.IridiumSkyblock;
+import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import it.unimi.dsi.fastutil.Hash;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;

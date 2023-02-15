@@ -1,5 +1,7 @@
 package be.sixefyle;
 
+import be.sixefyle.arena.pve.PveArenaListener;
+import be.sixefyle.commands.ArenaCommand;
 import be.sixefyle.commands.PowerCommand;
 import be.sixefyle.commands.RandomItemCommand;
 import be.sixefyle.commands.ReloadCommand;
@@ -23,6 +25,7 @@ import com.iridium.iridiumskyblock.IridiumSkyblock;
 import com.iridium.iridiumskyblock.Upgrade;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import com.iridium.iridiumskyblock.upgrades.UpgradeData;
+import fr.skytasul.glowingentities.GlowingEntities;
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
@@ -43,6 +46,7 @@ public class UnlimitedGrind extends JavaPlugin {
     private static Economy econ = null;
     private static HolographicDisplaysAPI holoApi = null;
     private ProtocolManager protocolManager;
+    private GlowingEntities glowingEntities;
 
     @Override
     public void onEnable() {
@@ -50,6 +54,7 @@ public class UnlimitedGrind extends JavaPlugin {
         protocolManager = ProtocolLibrary.getProtocolManager();
         initConfig();
         initHologramAPI();
+        initGlowingApi();
         if (!setupEconomy() ) {
             getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
             getServer().getPluginManager().disablePlugin(this);
@@ -60,10 +65,12 @@ public class UnlimitedGrind extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new BlockGeneratorListener(), this);
         Bukkit.getPluginManager().registerEvents(new SpawnerListener(), this);
         Bukkit.getPluginManager().registerEvents(new ItemManager(), this);
+        Bukkit.getPluginManager().registerEvents(new PveArenaListener(), this);
 
         getCommand("ugreload").setExecutor(new ReloadCommand());
         getCommand("power").setExecutor(new PowerCommand());
         getCommand("randomgive").setExecutor(new RandomItemCommand());
+        getCommand("arena").setExecutor(new ArenaCommand());
 
         initNewUpgrade();
 
@@ -324,6 +331,10 @@ public class UnlimitedGrind extends JavaPlugin {
         holoApi = HolographicDisplaysAPI.get(getPlugin(UnlimitedGrind.class));
     }
 
+    private void initGlowingApi(){
+        glowingEntities = new GlowingEntities(this);
+    }
+
     private boolean setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
             return false;
@@ -342,5 +353,9 @@ public class UnlimitedGrind extends JavaPlugin {
 
     public static HolographicDisplaysAPI getHolographicApi() {
         return holoApi;
+    }
+
+    public GlowingEntities getGlowingEntities() {
+        return glowingEntities;
     }
 }

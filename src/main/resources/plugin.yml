@@ -29,3 +29,10 @@ commands:
     permission: ug.admin
     permission-message: You do not have permission!
     usage: /randomgive <power>
+  arena:
+    description: Arena commands
+    aliases:
+      - a
+    permission: ug.player
+    permission-message: You do not have permission!
+    usage: /arena <power>

@@ -17,12 +17,35 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.1</version>
-                <configuration>
-                    <outputDirectory>C:/Users/sixef/OneDrive/Bureau/server/plugins</outputDirectory>
-                </configuration>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <!--<outputDirectory>C:/Users/sixef/OneDrive/Bureau/server/plugins</outputDirectory> -->
+                            <outputFile>C:/Users/sixef/OneDrive/Bureau/server/plugins/UnlimitedGrind.jar</outputFile>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.zaxxer.hikari</pattern>
+                                    <shadedPattern>me.mc2.internal.hikari</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-jar-plugin</artifactId>-->
+<!--                <version>2.3.1</version>-->
+<!--                <configuration>-->
+<!--                    <outputDirectory>C:/Users/sixef/OneDrive/Bureau/server/plugins</outputDirectory>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
         </plugins>
     </build>
 
@@ -47,7 +70,22 @@
             <id>dmulloy2-repo</id>
             <url>https://repo.dmulloy2.net/repository/public/</url>
         </repository>
+        <repository>
+            <id>enginehub-maven</id>
+            <url>https://maven.enginehub.org/repo/</url>
+        </repository>
     </repositories>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.intellectualsites.bom</groupId>
+                <artifactId>bom-1.18.x</artifactId>
+                <version>1.24</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>io.papermc.paper</groupId>
@@ -59,6 +97,7 @@
             <groupId>com.iridium</groupId>
             <artifactId>IridiumSkyblock</artifactId>
             <version>LATEST</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>me.filoghost.holographicdisplays</groupId>
@@ -83,11 +122,46 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
             <version>1.9</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.comphenix.protocol</groupId>
             <artifactId>ProtocolLib</artifactId>
             <version>4.8.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fastasyncworldedit</groupId>
+            <artifactId>FastAsyncWorldEdit-Core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fastasyncworldedit</groupId>
+            <artifactId>FastAsyncWorldEdit-Bukkit</artifactId>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>FastAsyncWorldEdit-Core</artifactId>
+                    <groupId>*</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.lingala.zip4j</groupId>
+            <artifactId>zip4j</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.skytasul</groupId>
+            <artifactId>glowingentities</artifactId>
+            <version>1.1.3</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

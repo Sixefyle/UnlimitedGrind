@@ -2,12 +2,16 @@ package be.sixefyle.listeners;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
+import be.sixefyle.arena.Arena;
+import be.sixefyle.arena.WorldManager;
+import be.sixefyle.arena.pve.PveArena;
 import be.sixefyle.items.passifs.Passif;
 import be.sixefyle.items.passifs.melee.LifeConversion;
 import be.sixefyle.utils.HologramUtils;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import com.iridium.iridiumskyblock.database.Island;
 import com.iridium.iridiumskyblock.database.User;
+import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Damageable;
