@@ -11,8 +11,8 @@ public enum Arena {
             Arrays.asList(new Location(null, 25, 65, 15)),
             Arrays.asList(new Location(null, 10, 65, 10))),
     ICE("ice",
-            Arrays.asList(new Location(null, 50, 87, 14)),
-            Arrays.asList(new Location(null, 66, 81, 2))),
+            Arrays.asList(new Location(null, -78, 79, 53)),
+            Arrays.asList(new Location(null, -99, 80, 77))),
     ;
 
     private String schematicName;

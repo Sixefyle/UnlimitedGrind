@@ -1,6 +1,7 @@
 package be.sixefyle.items;
 
-import net.md_5.bungee.api.ChatColor;
+
+import org.bukkit.ChatColor;
 
 import java.util.Random;
 
@@ -9,7 +10,7 @@ public enum Rarity {
     MAGIC(ChatColor.BLUE, "Magic", 30.0, 1),
     RARE(ChatColor.YELLOW, "Rare", 14.0, 2),
     LEGENDARY(ChatColor.GOLD, "Legendary", 0.95, 3),
-    MYTHIC(ChatColor.AQUA, "Mythic", 1005, 5),
+    MYTHIC(ChatColor.AQUA, "Mythic", 0.05, 5),
     ;
 
     private final ChatColor color;

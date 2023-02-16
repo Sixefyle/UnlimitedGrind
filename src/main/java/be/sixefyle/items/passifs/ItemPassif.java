@@ -45,7 +45,7 @@ public abstract class ItemPassif {
 
     public double getReadableStrength(){
         if(isStrenghtPercentage) {
-            return (strength - 1) * 100;
+            return strength * 100;
         }
         return strength;
     }

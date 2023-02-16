@@ -3,6 +3,7 @@ package be.sixefyle.items;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.passifs.Passif;
+import be.sixefyle.utils.ColorUtils;
 import be.sixefyle.utils.NumberUtils;
 import be.sixefyle.utils.PlaceholderUtils;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
@@ -11,17 +12,21 @@ import com.iridium.iridiumskyblock.IridiumSkyblock;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import it.unimi.dsi.fastutil.Hash;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.entity.Item;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Objective;
 
 import java.util.*;
+
+import static com.iridium.iridiumcore.DefaultFontInfo.r;
+import static com.iridium.iridiumcore.DefaultFontInfo.z;
 
 public class UGItem {
     private ItemStack item;
@@ -194,6 +199,26 @@ public class UGItem {
 
     public String getSuffix() {
         return suffix;
+    }
+
+    public void createRarityParticle(Item item){
+        new BukkitRunnable() {
+            Location loc;
+            Location particleLoc;
+            Particle.DustOptions dustOptions;
+            @Override
+            public void run() {
+                if(item == null || item.isDead()){
+                    cancel();
+                    return;
+                }
+                loc = item.getLocation();
+
+                dustOptions = new Particle.DustOptions(ColorUtils.convertChatColorToColor(rarity.getColor()), .5f);
+                particleLoc = loc.clone();
+                particleLoc.add(NumberUtils.getRandomNumber(-.3,.3),NumberUtils.getRandomNumber(.1,.5), NumberUtils.getRandomNumber(-.3,.3)).getWorld().spawnParticle(Particle.REDSTONE, particleLoc, 0, 0, 0, 0, .1, dustOptions);
+            }
+        }.runTaskTimer(UnlimitedGrind.getInstance(), 0, 6 - getRarity().getBonusAttributeAmount());
     }
 
     public static boolean isMythic(ItemStack item){

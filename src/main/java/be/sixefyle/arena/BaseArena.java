@@ -1,6 +1,8 @@
 package be.sixefyle.arena;
 
-public class BaseArena {
+import java.util.UUID;
+
+public abstract class BaseArena {
 
     private Arena arena;
 
@@ -11,4 +13,10 @@ public class BaseArena {
     public Arena getArena() {
         return arena;
     }
+
+    public abstract void join(double power);
+
+    public abstract UUID getWorldUUID();
+
+    public abstract String getWorldName();
 }

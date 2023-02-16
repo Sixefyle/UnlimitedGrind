@@ -95,7 +95,7 @@ public class LethalBlock extends ItemPassif implements OnReceiveDamage, Stackabl
         if(!nbtArmor.hasKey(damageBlockedNBTKey)) {
             resetStack(nbtArmor);
         }
-        addStack(nbtArmor, e.getDamage() * (getStrength()-1));
+        addStack(nbtArmor, e.getDamage() * getStrength());
         checkIfPlayerBlock(player, armor);
         nbtArmor.applyNBT(armor);
     }

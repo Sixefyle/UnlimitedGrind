@@ -36,7 +36,7 @@ public class LifeConversion extends ItemPassif implements OnEquip {
                 AttributeModifier.Operation.ADD_NUMBER));
         player.getAttribute(Attribute.GENERIC_MAX_HEALTH).addModifier(players.get(player).get(0));
 
-        double bonusDamagePercent = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() * (getStrength() + getMythicBonus());
+        double bonusDamagePercent = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() * getStrength();
         players.get(player).add(new AttributeModifier(
                 attributeName,
                 bonusDamagePercent,

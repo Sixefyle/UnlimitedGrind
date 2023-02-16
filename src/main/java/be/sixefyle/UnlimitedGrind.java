@@ -1,5 +1,6 @@
 package be.sixefyle;
 
+import be.sixefyle.arena.WorldManager;
 import be.sixefyle.arena.pve.PveArenaListener;
 import be.sixefyle.commands.ArenaCommand;
 import be.sixefyle.commands.PowerCommand;
@@ -28,10 +29,7 @@ import com.iridium.iridiumskyblock.upgrades.UpgradeData;
 import fr.skytasul.glowingentities.GlowingEntities;
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.Particle;
+import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -46,7 +44,7 @@ public class UnlimitedGrind extends JavaPlugin {
     private static Economy econ = null;
     private static HolographicDisplaysAPI holoApi = null;
     private ProtocolManager protocolManager;
-    private GlowingEntities glowingEntities;
+    private static GlowingEntities glowingEntities;
 
     @Override
     public void onEnable() {
@@ -86,6 +84,17 @@ public class UnlimitedGrind extends JavaPlugin {
                     event.setCancelled(true);
             }
         });
+    }
+
+    @Override
+    public void onDisable() {
+        super.onDisable();
+
+        for (World world : Bukkit.getWorlds()) {
+            if(world.getName().startsWith("arena_")){
+                WorldManager.deleteWorld(world);
+            }
+        }
     }
 
     public void initConfig(){
@@ -213,33 +222,33 @@ public class UnlimitedGrind extends JavaPlugin {
         config.set("lang.item.name", "%rarity% %prefix%%name% %suffix%");
         config.set("lang.item.power", "&7Item Power: &c" + Symbols.POWER.get() + "%power%");
 
-        config.set("itemPassif.moreDamage.strength", 1.25);
+        config.set("itemPassif.moreDamage.strength", 0.25);
         config.set("itemPassif.moreDamage.name", "&6More Damage");
         config.set("itemPassif.moreDamage.lore", new ArrayList<>() {{
             add("&7Increase all damage by &e%strength%%&7");
         }});
 
-        config.set("itemPassif.explosion.strength", 1.40);
+        config.set("itemPassif.explosion.strength", 0.40);
         config.set("itemPassif.explosion.name", "&6Explosion");
         config.set("itemPassif.explosion.lore", new ArrayList<>() {{
             add("&7Create an explosion on your target damaging all");
             add("&7creature on 5 blocks for &e%strength%%&7 of the damage you dealt");
         }});
 
-        config.set("itemPassif.damageReduction.strength", 1.05);
+        config.set("itemPassif.damageReduction.strength", 0.05);
         config.set("itemPassif.damageReduction.name", "&6Rock Solide");
         config.set("itemPassif.damageReduction.lore", new ArrayList<>() {{
             add("&7Reduce all incoming damage by &e%strength%%");
         }});
 
-        config.set("itemPassif.thunderStorm.strength", 13.5);
+        config.set("itemPassif.thunderStorm.strength", 12.5);
         config.set("itemPassif.thunderStorm.name", "&bThunder Storm");
         config.set("itemPassif.thunderStorm.lore", new ArrayList<>() {{
             add("&7Small chance to let rain a thunder storm to all");
             add("&7nearby creatures dealing &b%strength%%&7 of the armor power");
         }});
 
-        config.set("itemPassif.lethalBlock.strength", 1.05);
+        config.set("itemPassif.lethalBlock.strength", 0.05);
         config.set("itemPassif.lethalBlock.name", "&6Lethal Block");
         config.set("itemPassif.lethalBlock.itemPrefixName", "Green's");
         config.set("itemPassif.lethalBlock.lore", new ArrayList<>() {{
@@ -259,7 +268,7 @@ public class UnlimitedGrind extends JavaPlugin {
             add("&7explode and dealing &e100% of the shared damages&7");
         }});
 
-        config.set("itemPassif.lifeConversion.strength", 1.015);
+        config.set("itemPassif.lifeConversion.strength", 0.015);
         config.set("itemPassif.lifeConversion.name", "&6Life Conversion");
         config.set("itemPassif.lifeConversion.itemPrefixName", "Azellio's");
         config.set("itemPassif.lifeConversion.lore", new ArrayList<>() {{
@@ -267,6 +276,8 @@ public class UnlimitedGrind extends JavaPlugin {
             add("&7your damage by &e%strength%% for each HP reduced&7.");
         }});
 
+        config.set("pve.arena.rareDropChance", 0.01);
+        config.set("pve.arena.perWaveRareDropChanceIncrease", 0.0002); // 1 wave = 0.02% added to rare drop chance
 
         //getLogger().severe("Down here \\/");
         //getLogger().severe(config.getConfigurationSection("lang.spawner.gui").getKeys(true) + "");
@@ -355,7 +366,7 @@ public class UnlimitedGrind extends JavaPlugin {
         return holoApi;
     }
 
-    public GlowingEntities getGlowingEntities() {
+    public static GlowingEntities getGlowingEntities() {
         return glowingEntities;
     }
 }

@@ -4,7 +4,10 @@ import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.items.UGItem;
 import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.passifs.interfaces.OnMeleeHit;
+import be.sixefyle.utils.HologramUtils;
+import be.sixefyle.utils.NumberUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
@@ -26,12 +29,12 @@ public class ExplodePassif extends ItemPassif implements OnMeleeHit {
         Location loc = e.getEntity().getLocation();
         loc.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, loc,1);
 
-        ItemStack item = player.getInventory().getItemInMainHand();
-        double mythicBonusDamage = UGItem.isMythic(item) ? 0 : getMythicBonus();
+        double damage = e.getDamage() * getStrength();
         for (LivingEntity nearbyLivingEntity : loc.getNearbyLivingEntities(5)) {
-            if(nearbyLivingEntity.equals(player)) continue;
+            if(nearbyLivingEntity.equals(player) || nearbyLivingEntity.equals(e.getEntity())) continue;
 
-            nearbyLivingEntity.damage(e.getDamage() * getStrength() + mythicBonusDamage);
+            nearbyLivingEntity.damage(damage);
+            HologramUtils.createDamageIndicator(nearbyLivingEntity.getLocation(), NumberUtils.format(damage), ChatColor.AQUA);
         }
     }
 }

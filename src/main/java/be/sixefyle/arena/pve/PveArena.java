@@ -1,5 +1,6 @@
 package be.sixefyle.arena.pve;
 
+import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.arena.Arena;
 import be.sixefyle.arena.BaseArena;
@@ -10,29 +11,45 @@ import org.bukkit.metadata.FixedMetadataValue;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class PveArena extends BaseArena {
 
     private final List<Location> creatureSpawnLocations;
     private final List<Location> playerSpawnLocations;
-    private Player owner;
+    private UGPlayer owner;
+    private UUID worldUUID;
     private ArenaManager arenaManager;
 
-    public PveArena(Player owner, Arena arena) {
+    public PveArena(UGPlayer owner, Arena arena) {
         super(arena);
         this.creatureSpawnLocations = arena.getCreatureSpawnLocs();
         this.playerSpawnLocations = arena.getCreatureSpawnLocs();
         this.owner = owner;
+        this.worldUUID = owner.getPlayer().getUniqueId();
     }
 
+    @Override
     public void join(double power){
-        if(WorldManager.createVoidAndTeleport(owner, getArena())) {
-            arenaManager = new ArenaManager(getArena(), owner.getWorld(), Arrays.asList(owner));
+        Player player = owner.getPlayer();
+        UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+        if(WorldManager.createVoidAndTeleport(player, getArena())) {
+            arenaManager = new ArenaManager(getArena(), player.getWorld(), Arrays.asList(ugPlayer));
             arenaManager.setArenaPower(power);
             arenaManager.startGame();
 
-            owner.setMetadata("arenaWorld", new FixedMetadataValue(UnlimitedGrind.getInstance(), owner.getWorld()));
+            player.setMetadata("arenaWorld", new FixedMetadataValue(UnlimitedGrind.getInstance(), player.getWorld()));
         }
+    }
+
+    @Override
+    public UUID getWorldUUID() {
+        return worldUUID;
+    }
+
+    @Override
+    public String getWorldName(){
+        return "arena_" + worldUUID;
     }
 
     public ArenaManager getArenaManager() {

@@ -1,13 +1,11 @@
 package be.sixefyle.arena.pve;
 
+import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.arena.Arena;
 import be.sixefyle.arena.WorldManager;
-import com.iridium.iridiumskyblock.IridiumSkyblock;
-import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
-import org.bukkit.Bukkit;
+import net.kyori.adventure.text.Component;
 import org.bukkit.World;
-import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -27,45 +25,45 @@ public class ArenaManager {
     private double powerToAddEachWave;
     private BukkitTask bukkitTask;
     private World world;
-    private List<Player> players = new ArrayList<>();
-    private Player owner;
+    private List<UGPlayer> ugPlayers = new ArrayList<>();
+    private int playerAlive;
 
     private static HashMap<World, ArenaManager> arenaManagers = new HashMap<>();
 
-    public ArenaManager(Arena arena, World world, List<Player> players, int minCreature, int maxCreature) {
+    public ArenaManager(Arena arena, World world, List<UGPlayer> players, int minCreature, int maxCreature) {
         this(arena, world, players);
         this.minCreature = minCreature;
         this.maxCreature = maxCreature;
     }
 
-    public ArenaManager(Arena arena, World world, List<Player> players) {
+    public ArenaManager(Arena arena, World world, List<UGPlayer> players) {
         currentWave = 1;
         bossWave = 5;
         minCreature = 5;
         maxCreature = 30;
         this.arena = arena;
         this.world = world;
-        this.players.addAll(players);
-        this.owner = players.get(0);
+        this.ugPlayers.addAll(players);
+        playerAlive = players.size();
 
         arenaManagers.put(world, this);
     }
 
     public void startGame(){
-        wave = new Wave(minCreature, arena.getCreatureSpawnLocs(), world, players);
-        wave.start(arenaPower);
+        wave = new Wave(minCreature, arena.getCreatureSpawnLocs(), world, ugPlayers);
+        wave.start(arenaPower, currentWave);
 
         bukkitTask = new BukkitRunnable() {
-            int newAmount;
+            int newAmount = minCreature;
             @Override
             public void run() {
                 if(wave.isEnd()){
-                    newAmount = Math.min(minCreature + 2, maxCreature);
                     wave.setCreatureToSpawn(newAmount);
-                    wave.start(arenaPower);
+                    wave.start(arenaPower, currentWave);
 
                     if(++currentWave % bossWave == 0){
                         wave.spawnBoss();
+                        newAmount = Math.min(minCreature += 2, maxCreature);
                         addArenaPower();
                     }
                 }
@@ -77,7 +75,11 @@ public class ArenaManager {
         wave.end();
         bukkitTask.cancel();
 
-        WorldManager.deleteWorldArena(owner);
+        for (UGPlayer ugPlayer : ugPlayers) {
+            ugPlayer.getPlayer().sendMessage(Component.text("Finito gg!"));
+        }
+
+        WorldManager.deleteWorld(world);
     }
 
     public BukkitTask getBukkitTask() {
@@ -105,11 +107,19 @@ public class ArenaManager {
         return world;
     }
 
-    public List<Player> getPlayers() {
-        return players;
+    public List<UGPlayer> getUgPlayers() {
+        return ugPlayers;
     }
 
     public static HashMap<World, ArenaManager> getArenaManagers() {
         return arenaManagers;
+    }
+
+    public int getPlayerAlive() {
+        return playerAlive;
+    }
+
+    public void reducePlayerAlive(){
+        playerAlive--;
     }
 }

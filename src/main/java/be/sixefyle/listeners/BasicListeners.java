@@ -5,6 +5,7 @@ import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.arena.Arena;
 import be.sixefyle.arena.WorldManager;
 import be.sixefyle.arena.pve.PveArena;
+import be.sixefyle.items.UGItem;
 import be.sixefyle.items.passifs.Passif;
 import be.sixefyle.items.passifs.melee.LifeConversion;
 import be.sixefyle.utils.HologramUtils;
@@ -22,8 +23,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.jetbrains.annotations.NotNull;
 
@@ -86,6 +89,15 @@ public class BasicListeners implements Listener {
             for (AttributeModifier modifier : player.getAttribute(value).getModifiers()) {
                 player.getAttribute(value).removeModifier(modifier);
             }
+        }
+    }
+
+    @EventHandler
+    public void onDropItem(PlayerDropItemEvent e){
+        ItemStack item = e.getItemDrop().getItemStack();
+        UGItem ugItem = UGItem.getFromItemStack(item);
+        if(ugItem != null){
+            ugItem.createRarityParticle(e.getItemDrop());
         }
     }
 }

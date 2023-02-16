@@ -56,7 +56,7 @@ public class ThunderStormPassif extends ItemPassif implements OnReceiveDamage {
             if(!armor.getItemMeta().getPersistentDataContainer().has(powerKey)) return;
 
             double armorPower = armor.getItemMeta().getPersistentDataContainer().get(powerKey, PersistentDataType.DOUBLE);
-            double damage = armorPower * (getStrength()-1);;
+            double damage = armorPower * getStrength();
             for (LivingEntity nearbyLivingEntity : player.getLocation().getNearbyLivingEntities(radius)) {
                 if(nearbyLivingEntity.equals(player)) continue;
 

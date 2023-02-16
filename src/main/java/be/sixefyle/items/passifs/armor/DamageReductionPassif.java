@@ -18,6 +18,6 @@ public class DamageReductionPassif extends ItemPassif implements OnReceiveDamage
 
     @Override
     public void onGetDamage(EntityDamageEvent e, Player player, ItemStack armor) {
-        e.setDamage(e.getDamage() / getStrength());
+        e.setDamage(e.getDamage() / (getStrength()+1));
     }
 }

@@ -1,5 +1,8 @@
 package be.sixefyle;
 
+import be.sixefyle.arena.Arena;
+import be.sixefyle.arena.BaseArena;
+import be.sixefyle.arena.pve.PveArena;
 import be.sixefyle.enums.Symbols;
 import be.sixefyle.exception.PlayerNotExist;
 import be.sixefyle.utils.NumberUtils;
@@ -20,6 +23,7 @@ public class UGPlayer {
     private Player player;
     private UGIsland ugIsland;
     private RScoreboard scoreboard;
+    private BaseArena arena;
 
     public static UGPlayer GetUGPlayer(Player player){
         return playerMap.get(player.getUniqueId());
@@ -115,5 +119,18 @@ public class UGPlayer {
     public void getPlayerData() throws PlayerNotExist {
 
         throw new PlayerNotExist();
+    }
+
+    public void joinPveArena(Arena arena, double power){
+        this.arena = new PveArena(this, arena);
+        this.arena.join(power);
+    }
+
+    public void leavePveArena(){
+        this.arena = null;
+    }
+
+    public BaseArena getArena() {
+        return arena;
     }
 }

@@ -1,26 +1,37 @@
 package be.sixefyle.arena.pve;
 
+import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
-import be.sixefyle.arena.Arena;
-import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.Player;
+import be.sixefyle.items.ItemManager;
+import be.sixefyle.items.UGItem;
+import com.iridium.iridiumskyblock.IridiumSkyblock;
+import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
-import org.bukkit.persistence.PersistentDataType;
 
 public class PveArenaListener implements Listener {
 
     @EventHandler
     public void onEntityDie(EntityDeathEvent e){
         Entity entity = e.getEntity();
-        if(entity.hasMetadata("world")){
+        if(entity.hasMetadata("world") && entity.hasMetadata("power") && entity.hasMetadata("wave")){
             ArenaManager arenaManager = ArenaManager.getArenaManagers().get(entity.getWorld());
             arenaManager.getWave().getCreatures().remove(entity);
             e.getDrops().clear();
+
+            FileConfiguration config = UnlimitedGrind.getInstance().getConfig();
+            double rareDropChance = config.getDouble("pve.arena.rareDropChance") +
+                    (config.getDouble("pve.arena.perWaveRareDropChanceIncrease") * entity.getMetadata("wave").get(0).asInt());
+
+            if(Math.random() <= rareDropChance){
+                UGItem rareItem = ItemManager.generateRandomItem(entity.getMetadata("power").get(0).asDouble());
+
+                Item item = entity.getWorld().dropItemNaturally(entity.getLocation(), rareItem.getItem());
+                rareItem.createRarityParticle(item);
+            }
         }
     }
 
@@ -29,15 +40,14 @@ public class PveArenaListener implements Listener {
         Player player = e.getPlayer();
         if(player.hasMetadata("arenaWorld")){
             e.setCancelled(true);
+            UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
             ArenaManager arenaManager = ArenaManager.getArenaManagers().get(player.getWorld());
-            arenaManager.getPlayers().remove(player);
-
+            //arenaManager.getUgPlayers().remove(ugPlayer);
+            arenaManager.reducePlayerAlive();
             player.spigot().respawn();
-//            if(player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation())) {
-//                player.removeMetadata("arenaWorld", UnlimitedGrind.getInstance());
-//            }
+            ugPlayer.leavePveArena();
 
-            if(arenaManager.getPlayers().size() <= 0){
+            if(arenaManager.getPlayerAlive() <= 0){
                 arenaManager.stopGame();
             }
         }
@@ -46,14 +56,18 @@ public class PveArenaListener implements Listener {
     @EventHandler
     public void onCreatureTakeDamage(EntityDamageByEntityEvent e){
         Entity entity = e.getEntity();
-        if(entity.hasMetadata("world") && e.getDamager() instanceof Player player && entity instanceof Monster creature){
-            creature.setTarget(player);
+        if(entity.hasMetadata("world")){
+            if(e.getDamager() instanceof Mob){
+                e.setCancelled(true);
+            } else if(e.getDamager() instanceof Player player && entity instanceof Mob creature){
+                creature.setTarget(player);
+            }
         }
     }
 
     @EventHandler
     public void onCreatureChangeTarget(EntityTargetEvent e){
-        if(e.getEntity().hasMetadata("world") && e.getTarget() instanceof Monster){
+        if(e.getEntity().hasMetadata("world") && e.getTarget() instanceof Mob){
             e.setCancelled(true);
         }
     }
