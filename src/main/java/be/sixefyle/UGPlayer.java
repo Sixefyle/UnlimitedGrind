@@ -5,12 +5,19 @@ import be.sixefyle.arena.BaseArena;
 import be.sixefyle.arena.pve.PveArena;
 import be.sixefyle.enums.Symbols;
 import be.sixefyle.exception.PlayerNotExist;
+import be.sixefyle.group.Group;
 import be.sixefyle.utils.NumberUtils;
+import com.iridium.iridiumcolorapi.IridiumColorAPI;
+import com.iridium.iridiumcore.DefaultFontInfo;
+import com.iridium.iridiumcore.IridiumCore;
+import com.iridium.iridiumcore.utils.StringUtils;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import com.iridium.iridiumskyblock.database.Island;
 import josegamerpt.realscoreboard.api.RealScoreboardAPI;
 import josegamerpt.realscoreboard.api.scoreboard.RScoreboard;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -24,6 +31,7 @@ public class UGPlayer {
     private UGIsland ugIsland;
     private RScoreboard scoreboard;
     private BaseArena arena;
+    private Group group;
 
     public static UGPlayer GetUGPlayer(Player player){
         return playerMap.get(player.getUniqueId());
@@ -121,16 +129,55 @@ public class UGPlayer {
         throw new PlayerNotExist();
     }
 
+    public Group getGroup() {
+        return group;
+    }
+
+    public Group setGroup(Group group) {
+        return this.group = group;
+    }
+
+    public boolean leaveGroup(){
+        if(group == null) return false;
+
+        group.removePlayer(this);
+        group = null;
+        return true;
+    }
+
     public void joinPveArena(Arena arena, double power){
         this.arena = new PveArena(this, arena);
         this.arena.join(power);
+        player.setGameMode(GameMode.ADVENTURE);
     }
 
     public void leavePveArena(){
         this.arena = null;
+        player.setGameMode(GameMode.SURVIVAL);
+        player.spigot().respawn();
     }
 
     public BaseArena getArena() {
         return arena;
+    }
+
+    public void sendMessageComponents(List<Component> components){
+        int spaceToDo = 2;
+        Component messageToSend = Component.empty();
+        for (int i = 0; i < spaceToDo ; i++) {
+            messageToSend = messageToSend.append(Component.newline());
+        }
+        for (Component component : components) {
+            messageToSend = messageToSend.append(component).append(Component.newline());
+        }
+        for (int i = 0; i < spaceToDo-1; i++) {
+            messageToSend = messageToSend.append(Component.newline());
+        }
+
+        getPlayer().sendMessage(messageToSend);
+    }
+
+    public void sendMessageComponents(Component component){
+        sendMessageComponents(List.of(component));
     }
 }

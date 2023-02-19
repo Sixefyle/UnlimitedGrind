@@ -4,14 +4,23 @@ import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.arena.Arena;
 import be.sixefyle.arena.WorldManager;
+import be.sixefyle.utils.NumberUtils;
+import com.iridium.iridiumskyblock.IridiumSkyblock;
+import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
+import com.iridium.iridiumskyblock.database.Island;
+import com.iridium.iridiumskyblock.database.IslandBank;
 import net.kyori.adventure.text.Component;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 public class ArenaManager {
     private final Arena arena;
@@ -49,6 +58,19 @@ public class ArenaManager {
         arenaManagers.put(world, this);
     }
 
+    public void respawnPlayer(){
+        Player player;
+        Location loc;
+        for (UGPlayer ugPlayer : ugPlayers) {
+            player = ugPlayer.getPlayer();
+            if(player.getGameMode().equals(GameMode.SPECTATOR)){
+                loc = arena.getPlayerSpawnLocs().get(0).clone();
+                loc.setWorld(world);
+                ugPlayer.getPlayer().teleport(loc);
+            }
+        }
+    }
+
     public void startGame(){
         wave = new Wave(minCreature, arena.getCreatureSpawnLocs(), world, ugPlayers);
         wave.start(arenaPower, currentWave);
@@ -58,7 +80,9 @@ public class ArenaManager {
             @Override
             public void run() {
                 if(wave.isEnd()){
-                    wave.setCreatureToSpawn(newAmount);
+                    respawnPlayer();
+
+                    wave.setCreatureToSpawnAmount(newAmount);
                     wave.start(arenaPower, currentWave);
 
                     if(++currentWave % bossWave == 0){
@@ -75,8 +99,18 @@ public class ArenaManager {
         wave.end();
         bukkitTask.cancel();
 
+        IslandBank islandBank;
+        Optional<Island> island;
+        double crystalGain;
         for (UGPlayer ugPlayer : ugPlayers) {
-            ugPlayer.getPlayer().sendMessage(Component.text("Finito gg!"));
+            ugPlayer.leavePveArena();
+
+            island = IridiumSkyblockAPI.getInstance().getUser(ugPlayer.getPlayer()).getIsland();
+            if(island.isEmpty()) continue;
+            crystalGain = Math.pow(currentWave, 1.14)-1; //TODO: magic number
+            islandBank = IridiumSkyblock.getInstance().getIslandManager().getIslandBank(island.get(), IridiumSkyblock.getInstance().getBankItems().crystalsBankItem);
+            islandBank.setNumber(islandBank.getNumber() + crystalGain);
+            ugPlayer.getPlayer().sendMessage(Component.text("You got " + NumberUtils.format(crystalGain) + " crystals!"));
         }
 
         WorldManager.deleteWorld(world);

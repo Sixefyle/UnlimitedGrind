@@ -28,7 +28,7 @@ public class Wave {
         this.players = players;
     }
 
-    public void setCreatureToSpawn(int creatureToSpawn) {
+    public void setCreatureToSpawnAmount(int creatureToSpawn) {
         this.creatureToSpawn = creatureToSpawn;
     }
 

@@ -2,10 +2,7 @@ package be.sixefyle;
 
 import be.sixefyle.arena.WorldManager;
 import be.sixefyle.arena.pve.PveArenaListener;
-import be.sixefyle.commands.ArenaCommand;
-import be.sixefyle.commands.PowerCommand;
-import be.sixefyle.commands.RandomItemCommand;
-import be.sixefyle.commands.ReloadCommand;
+import be.sixefyle.commands.*;
 import be.sixefyle.enums.Symbols;
 import be.sixefyle.items.ItemManager;
 import be.sixefyle.listeners.BasicListeners;
@@ -69,6 +66,7 @@ public class UnlimitedGrind extends JavaPlugin {
         getCommand("power").setExecutor(new PowerCommand());
         getCommand("randomgive").setExecutor(new RandomItemCommand());
         getCommand("arena").setExecutor(new ArenaCommand());
+        getCommand("group").setExecutor(new GroupCommand());
 
         initNewUpgrade();
 

@@ -42,7 +42,7 @@ public class WorldManager {
 
             world.setTime(13000);
 
-            Location loc = arena.getPlayerSpawnLocs().get((int) (Math.random() * arena.getPlayerSpawnLocs().size()));
+            Location loc = arena.getPlayerSpawnLocs().get((int) (Math.random() * arena.getPlayerSpawnLocs().size())).clone();
             loc.setWorld(world);
             player.teleport(loc);
             return true;

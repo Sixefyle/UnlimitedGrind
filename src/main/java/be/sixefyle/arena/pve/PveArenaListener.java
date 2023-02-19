@@ -6,6 +6,7 @@ import be.sixefyle.items.ItemManager;
 import be.sixefyle.items.UGItem;
 import com.iridium.iridiumskyblock.IridiumSkyblock;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
+import org.bukkit.GameMode;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -40,12 +41,13 @@ public class PveArenaListener implements Listener {
         Player player = e.getPlayer();
         if(player.hasMetadata("arenaWorld")){
             e.setCancelled(true);
-            UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+            //UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
             ArenaManager arenaManager = ArenaManager.getArenaManagers().get(player.getWorld());
             //arenaManager.getUgPlayers().remove(ugPlayer);
             arenaManager.reducePlayerAlive();
-            player.spigot().respawn();
-            ugPlayer.leavePveArena();
+            player.setGameMode(GameMode.SPECTATOR);
+            //player.spigot().respawn();
+            //ugPlayer.leavePveArena();
 
             if(arenaManager.getPlayerAlive() <= 0){
                 arenaManager.stopGame();
