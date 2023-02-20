@@ -141,7 +141,7 @@ public class ArenaManager {
         return world;
     }
 
-    public List<UGPlayer> getUgPlayers() {
+    public List<UGPlayer> getParticipants() {
         return ugPlayers;
     }
 

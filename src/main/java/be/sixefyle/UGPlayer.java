@@ -137,6 +137,10 @@ public class UGPlayer {
         return this.group = group;
     }
 
+    public boolean hasGroup(){
+        return group != null;
+    }
+
     public boolean leaveGroup(){
         if(group == null) return false;
 
@@ -146,10 +150,15 @@ public class UGPlayer {
     }
 
     public void joinPveArena(Arena arena, double power){
-        this.arena = new PveArena(this, arena);
+        if(hasGroup()){
+            this.arena = new PveArena(getGroup(), arena);
+        } else {
+            this.arena = new PveArena(this, arena);
+        }
         this.arena.join(power);
         player.setGameMode(GameMode.ADVENTURE);
     }
+
 
     public void leavePveArena(){
         this.arena = null;

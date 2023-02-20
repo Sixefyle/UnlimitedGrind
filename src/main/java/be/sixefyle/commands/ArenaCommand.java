@@ -23,6 +23,7 @@ public class ArenaCommand implements CommandExecutor {
                 }
                 UGPlayer ugPlayer = UGPlayer.GetUGPlayer((Player) commandSender);
                 ugPlayer.joinPveArena(arena, Double.parseDouble(args[0]));
+
             } catch (InputMismatchException ignore) { }
         }
 

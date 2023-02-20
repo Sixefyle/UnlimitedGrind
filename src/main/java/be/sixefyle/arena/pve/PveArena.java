@@ -5,6 +5,7 @@ import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.arena.Arena;
 import be.sixefyle.arena.BaseArena;
 import be.sixefyle.arena.WorldManager;
+import be.sixefyle.group.Group;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -18,6 +19,7 @@ public class PveArena extends BaseArena {
     private final List<Location> creatureSpawnLocations;
     private final List<Location> playerSpawnLocations;
     private UGPlayer owner;
+    private Group group;
     private UUID worldUUID;
     private ArenaManager arenaManager;
 
@@ -29,11 +31,20 @@ public class PveArena extends BaseArena {
         this.worldUUID = owner.getPlayer().getUniqueId();
     }
 
+    public PveArena(Group group, Arena arena) {
+        super(arena);
+        this.creatureSpawnLocations = arena.getCreatureSpawnLocs();
+        this.playerSpawnLocations = arena.getCreatureSpawnLocs();
+        this.group = group;
+        this.owner = group.getOwner();
+        this.worldUUID = owner.getPlayer().getUniqueId();
+    }
+
     @Override
     public void join(double power){
         Player player = owner.getPlayer();
         UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
-        if(WorldManager.createVoidAndTeleport(player, getArena())) {
+        if(WorldManager.createVoidAndTeleport(player, group, getArena())) {
             arenaManager = new ArenaManager(getArena(), player.getWorld(), Arrays.asList(ugPlayer));
             arenaManager.setArenaPower(power);
             arenaManager.startGame();

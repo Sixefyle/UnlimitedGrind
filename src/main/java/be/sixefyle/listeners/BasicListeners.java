@@ -9,10 +9,12 @@ import be.sixefyle.items.UGItem;
 import be.sixefyle.items.passifs.Passif;
 import be.sixefyle.items.passifs.melee.LifeConversion;
 import be.sixefyle.utils.HologramUtils;
+import com.iridium.iridiumskyblock.IridiumSkyblock;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import com.iridium.iridiumskyblock.database.Island;
 import com.iridium.iridiumskyblock.database.User;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Damageable;
@@ -39,6 +41,13 @@ public class BasicListeners implements Listener {
         Player player = e.getPlayer();
         if (UGPlayer.playerMap.get(player) == null) {
             new UGPlayer(e.getPlayer());
+        }
+
+        if(IridiumSkyblockAPI.getInstance().getUser(player).getIsland().isPresent()) {
+            Island island = IridiumSkyblockAPI.getInstance().getUser(player).getIsland().get();
+            player.teleport(island.getHome());
+        } else {
+            player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
         }
     }
 

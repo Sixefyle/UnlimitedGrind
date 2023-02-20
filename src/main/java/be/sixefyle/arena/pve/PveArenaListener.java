@@ -4,14 +4,14 @@ import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.items.ItemManager;
 import be.sixefyle.items.UGItem;
-import com.iridium.iridiumskyblock.IridiumSkyblock;
-import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import org.bukkit.GameMode;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 public class PveArenaListener implements Listener {
 
@@ -78,6 +78,22 @@ public class PveArenaListener implements Listener {
     public void onCreatureTransform(EntityTransformEvent e){
         if(e.getEntity().hasMetadata("world")){
             e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent e){
+        Player player = e.getPlayer();
+        if(player.hasMetadata("arenaWorld")) {
+            ArenaManager arenaManager = ArenaManager.getArenaManagers().get(player.getWorld());
+            if(arenaManager != null){
+                arenaManager.reducePlayerAlive();
+                arenaManager.getParticipants().remove(UGPlayer.GetUGPlayer(player));
+
+                if(arenaManager.getPlayerAlive() <= 0){
+                    arenaManager.stopGame();
+                }
+            }
         }
     }
 }

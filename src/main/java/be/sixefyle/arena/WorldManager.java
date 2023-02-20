@@ -1,6 +1,7 @@
 package be.sixefyle.arena;
 
 import be.sixefyle.UGPlayer;
+import be.sixefyle.group.Group;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
@@ -23,8 +24,8 @@ public class WorldManager {
         }
     }
 
-    public static boolean createVoidAndTeleport(Player player, Arena arena){
-        String worldName = "arena_" + player.getUniqueId();
+    public static boolean createVoidAndTeleport(Player owner, Group group, Arena arena){
+        String worldName = "arena_" + owner.getUniqueId();
         if(unzipWorldAndRename(arena, worldName)){
             WorldCreator worldCreator = new WorldCreator(worldName);
             worldCreator.generator(new EmptyWorld());
@@ -44,10 +45,21 @@ public class WorldManager {
 
             Location loc = arena.getPlayerSpawnLocs().get((int) (Math.random() * arena.getPlayerSpawnLocs().size())).clone();
             loc.setWorld(world);
-            player.teleport(loc);
+
+            if(group != null) {
+                for (UGPlayer member : group.getMembers()) {
+                    member.getPlayer().teleport(loc);
+                }
+            } else {
+                owner.teleport(loc);
+            }
             return true;
         }
         return false;
+    }
+
+    public static boolean createVoidAndTeleport(Player owner, Arena arena){
+        return createVoidAndTeleport(owner, null, arena);
     }
 
 //    public static boolean createArena(Location loc, String schematicName){
