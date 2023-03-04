@@ -1,11 +1,13 @@
 package be.sixefyle.utils;
 
 import be.sixefyle.BetterSpawner;
+import be.sixefyle.UGPlayer;
 import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.UGItem;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
 import net.kyori.adventure.text.Component;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Damageable;
 
 import java.util.Locale;
@@ -56,7 +58,8 @@ public class PlaceholderUtils {
 
     public static String replace(UGItem ugItem, String s){
         s = s.replaceAll("%power%", String.format(Locale.ENGLISH, "%,.0f", ugItem.getPower()));
-        s = s.replaceAll("%rarity%", ugItem.getRarity().getColor() + ugItem.getRarity().getName());
+        s = s.replaceAll("%rarity%", ugItem.getRarity().getName());
+        s = s.replaceAll("%condition%", "");
 
         String prefix = ugItem.getPrefix();
         s = s.replaceAll("%prefix%", prefix != null ? prefix + " " : "");
@@ -71,6 +74,16 @@ public class PlaceholderUtils {
             s = s.replaceAll("%name%", StringUtils.capitalize(ugItem.getItem().getType().toString().toLowerCase()));
         }
 
+        return replace(s);
+    }
+
+    public static String replace(UGItem ugItem, UGPlayer ugPlayer, String s){
+        if(ugItem.getPower() > ugPlayer.getMaxWearablePower()){
+            s = s.replaceAll("%condition%", "You need " + NumberUtils.format(ugPlayer.neededPower(ugItem.getPower())) + " more max power to equip this!");
+        } else {
+            s = s.replaceAll("%condition%", "");
+        }
+        s = replace(ugItem, s);
         return replace(s);
     }
 

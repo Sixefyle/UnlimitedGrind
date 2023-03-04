@@ -1,32 +1,31 @@
 package be.sixefyle.items;
 
+import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
+import be.sixefyle.enums.AttributesName;
+import be.sixefyle.enums.ComponentColor;
 import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.passifs.Passif;
-import be.sixefyle.utils.ColorUtils;
 import be.sixefyle.utils.NumberUtils;
 import be.sixefyle.utils.PlaceholderUtils;
+import com.google.common.collect.Multimap;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
-import com.iridium.iridiumcore.dependencies.nbtapi.NBTItem;
-import com.iridium.iridiumskyblock.IridiumSkyblock;
-import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
-import it.unimi.dsi.fastutil.Hash;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Item;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scoreboard.Objective;
 
+import java.text.DecimalFormat;
 import java.util.*;
-
-import static com.iridium.iridiumcore.DefaultFontInfo.r;
-import static com.iridium.iridiumcore.DefaultFontInfo.z;
 
 public class UGItem {
     private ItemStack item;
@@ -59,41 +58,17 @@ public class UGItem {
         this.prefix = prefix;
         this.suffix = suffix;
 
-        initItem(itemType, lore);
+        createItem(itemType, lore);
     }
 
-    public void initItem(Material material, List<String> lore){
+    public void createItem(Material material, List<String> lore){
         if(item == null){
             item = new ItemStack(material);
         }
         ItemMeta itemMeta = item.getItemMeta();
 
         String nameLine = UnlimitedGrind.getInstance().getConfig().getString("lang.item.name");
-        itemMeta.displayName(Component.text(PlaceholderUtils.replace(this, nameLine)));
-
-        List<Component> loreComp = new ArrayList<>();
-
-        String powerLine = UnlimitedGrind.getInstance().getConfig().getString("lang.item.power");
-        loreComp.add(Component.text(PlaceholderUtils.replace(this, powerLine)));
-        if(lore != null){
-            for (String s : lore) {
-                loreComp.add(Component.text(PlaceholderUtils.replace(this, s)));
-            }
-        }
-        loreComp.add(Component.text(""));
-
-        boolean isMythic = rarity.equals(Rarity.MYTHIC);
-
-        ItemPassif itemPassif;
-        for (Passif passif : passifList) {
-            itemPassif = passif.getItemPassif();
-            loreComp.add(Component.text(IridiumColorAPI.process(itemPassif.getName() + ": ")));
-            for (String s : itemPassif.getDescription()) {
-                loreComp.add(Component.text("   " + PlaceholderUtils.replace(itemPassif, isMythic, s)));
-            }
-        }
-
-        itemMeta.lore(loreComp);
+        itemMeta.displayName(Component.text(PlaceholderUtils.replace(this, nameLine)).color(rarity.getColor()).decoration(TextDecoration.ITALIC, false));
 
         itemMeta.getPersistentDataContainer().set(
                 new NamespacedKey(UnlimitedGrind.getInstance(), "power"), PersistentDataType.DOUBLE, power);
@@ -106,7 +81,6 @@ public class UGItem {
         }
         itemMeta.getPersistentDataContainer().set(
                 new NamespacedKey(UnlimitedGrind.getInstance(), "passifIdArray"), PersistentDataType.INTEGER_ARRAY, passifIds);
-
 
         DropTable dropTableItem = DropTable.valueOf(item.getType().name());
         ItemCategory dropTableItemCategory = dropTableItem.getItemCategory();
@@ -132,23 +106,136 @@ public class UGItem {
 
         } else if(dropTableItemCategory.equals(ItemCategory.ARMOR) || dropTableItemCategory.equals(ItemCategory.SHIELD)) {
             boolean isShield = dropTableItemCategory.equals(ItemCategory.SHIELD);
-            double armorResistance = Math.pow(getPower(), 0.4912);
+            double armorResistance = NumberUtils.getRandomNumber(Math.pow(getPower(), 0.6912), Math.pow(getPower(), 0.7012));
+            armorResistance = Double.min(armorResistance, 60000);
 
-            AttributeModifier armor = new AttributeModifier(UUID.randomUUID(),
+            AttributeModifier armorAttribute = new AttributeModifier(UUID.randomUUID(),
                     "generic.armor", armorResistance, AttributeModifier.Operation.ADD_NUMBER, dropTableItem.getSlot());
-            itemMeta.addAttributeModifier(Attribute.GENERIC_ARMOR, armor);
+            itemMeta.addAttributeModifier(Attribute.GENERIC_ARMOR, armorAttribute);
+
+            double bonusHealth = NumberUtils.getRandomNumber(Math.pow(getPower(), 1.04956), Math.pow(getPower(), 1.05956));
+            itemMeta.getPersistentDataContainer().set(
+                    new NamespacedKey(UnlimitedGrind.getInstance(), "bonusHealth"), PersistentDataType.DOUBLE, bonusHealth);
 
             HashMap<Attribute, Double> attributeList = new HashMap<>() {{
                put(Attribute.GENERIC_ARMOR_TOUGHNESS, .25);
-               put(Attribute.GENERIC_MAX_HEALTH, isShield ? .35 : .1);
-               put(Attribute.GENERIC_MOVEMENT_SPEED, .05);
+               put(Attribute.GENERIC_ATTACK_SPEED, .05);
+               put(Attribute.GENERIC_MOVEMENT_SPEED, isShield ? .03 : .05);
                put(Attribute.GENERIC_KNOCKBACK_RESISTANCE, isShield ? 1 : .1);
                put(Attribute.GENERIC_ATTACK_DAMAGE, isShield ? .1 : .2);
             }};
             addRandomAttributes(attributeList, itemMeta, dropTableItem.getSlot());
         }
+        itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 
+        setupLore(lore, itemMeta);
         item.setItemMeta(itemMeta);
+    }
+
+    public void updateLore(){
+        ItemMeta itemMeta = item.getItemMeta();
+        setupLore(null, itemMeta);
+        itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        item.setItemMeta(itemMeta);
+    }
+
+    public void updateConditionLore(UGPlayer ugPlayer){
+        ItemMeta itemMeta = item.getItemMeta();
+        String powerLine = UnlimitedGrind.getInstance().getConfig().getString("lang.item.condition");
+        List<Component> lore = itemMeta.lore();
+        lore.set(1, Component.text(PlaceholderUtils.replace(this, ugPlayer, powerLine)).color(ComponentColor.ERROR.getColor()));
+        itemMeta.lore(lore);
+        item.setItemMeta(itemMeta);
+    }
+
+    private void setupLore(List<String> lore, ItemMeta itemMeta){
+        List<Component> loreComp = new ArrayList<>();
+
+        setupPowerLore(loreComp);
+        loreComp.add(Component.text(""));
+        if(lore != null){
+            for (String s : lore) {
+                loreComp.add(Component.text(PlaceholderUtils.replace(this, s)));
+            }
+        }
+        loreComp.add(Component.text(""));
+
+        setupStatsLore(loreComp, itemMeta);
+        setupPassifLore(loreComp);
+
+        itemMeta.lore(loreComp);
+    }
+
+    private void setupPowerLore(List<Component> loreComp){
+        String powerLine = UnlimitedGrind.getInstance().getConfig().getString("lang.item.power");
+        loreComp.add(Component.text(PlaceholderUtils.replace(this, powerLine)));
+    }
+
+    private void setupStatsLore(List<Component> loreComp, ItemMeta itemMeta){
+        Multimap<Attribute, AttributeModifier> attributes = itemMeta.getAttributeModifiers();
+        if(attributes == null || attributes.isEmpty()) return;
+
+        HashMap<Attribute, AttributeModifier> primaryAttribute = new HashMap<>();
+        HashMap<Attribute, AttributeModifier> secondaryAttribute = new HashMap<>();
+        attributes.forEach((attribute, attributeModifier) -> {
+            if(AttributesName.isPrimary(attributeModifier)){
+                primaryAttribute.put(attribute, attributeModifier);
+            } else {
+                secondaryAttribute.put(attribute, attributeModifier);
+            }
+        });
+
+        loreComp.add(Component.text("◆ Primary").color(ComponentColor.GOLD.getColor()).decoration(TextDecoration.ITALIC, false));
+        primaryAttribute.forEach((attribute, attributeModifier) -> {
+            Component attributeComp = Component.empty();
+            attributeComp = attributeComp
+                    .decoration(TextDecoration.ITALIC, false)
+                    .append(Component.text("    ◆ ")).color(ComponentColor.GOLD.getColor())
+                    .append(getAttributeModifierLine(attributeModifier))
+                    .color(ComponentColor.NEUTRAL.getColor())
+                    .append(Component.text(AttributesName.getByAttribute(attribute).getName()));
+            loreComp.add(attributeComp);
+        });
+
+        if(secondaryAttribute.size() > 0) {
+            loreComp.add(Component.text(" "));
+            loreComp.add(Component.text("◇ Secondary").color(ComponentColor.GOLD.getColor()).decoration(TextDecoration.ITALIC, false));
+            secondaryAttribute.forEach((attribute, attributeModifier) -> {
+                Component attributeComp = Component.empty();
+                attributeComp = attributeComp
+                        .decoration(TextDecoration.ITALIC, false)
+                        .append(Component.text("    ◇ ")).color(ComponentColor.GOLD.getColor())
+                        .append(getAttributeModifierLine(attributeModifier))
+                        .color(ComponentColor.NEUTRAL.getColor())
+                        .append(Component.text(AttributesName.getByAttribute(attribute).getName()));
+                loreComp.add(attributeComp);
+            });
+        }
+    }
+
+    private Component getAttributeModifierLine(AttributeModifier attributeModifier){
+        Component component = Component.empty();
+        double amount = attributeModifier.getAmount();
+        boolean isPercentage = attributeModifier.getOperation().equals(AttributeModifier.Operation.MULTIPLY_SCALAR_1);
+        component = component
+                .color(amount > 0 ? ComponentColor.FINE.getColor() : ComponentColor.ERROR.getColor())
+                .append(Component.text(isPercentage ? String.format("%.2f", amount * 100) : String.format(Locale.ENGLISH, "%,.1f", amount)))
+                .append(isPercentage ? Component.text("%") : Component.empty())
+                .append(Component.text(" "));
+
+        return component;
+    }
+
+    private void setupPassifLore(List<Component> loreComp){
+        boolean isMythic = rarity.equals(Rarity.MYTHIC);
+        ItemPassif itemPassif;
+        for (Passif passif : passifList) {
+            itemPassif = passif.getItemPassif();
+            loreComp.add(Component.text(IridiumColorAPI.process(itemPassif.getName() + ": ")));
+            for (String s : itemPassif.getDescription()) {
+                loreComp.add(Component.text("   " + PlaceholderUtils.replace(itemPassif, isMythic, s)));
+            }
+        }
     }
 
     private void addRandomAttributes(HashMap<Attribute, Double> attributeMap, ItemMeta itemMeta, EquipmentSlot slot){
@@ -214,7 +301,8 @@ public class UGItem {
                 }
                 loc = item.getLocation();
 
-                dustOptions = new Particle.DustOptions(ColorUtils.convertChatColorToColor(rarity.getColor()), .5f);
+                dustOptions = new Particle.DustOptions(
+                        Color.fromBGR(rarity.getColor().blue(), rarity.getColor().green(), rarity.getColor().red()), .5f);
                 particleLoc = loc.clone();
                 particleLoc.add(NumberUtils.getRandomNumber(-.3,.3),NumberUtils.getRandomNumber(.1,.5), NumberUtils.getRandomNumber(-.3,.3)).getWorld().spawnParticle(Particle.REDSTONE, particleLoc, 0, 0, 0, 0, .1, dustOptions);
             }
@@ -230,7 +318,7 @@ public class UGItem {
         return false;
     }
 
-    public static void updateItemStackLorePassif(ItemStack item){
+    public static void updateItemStackLore(ItemStack item){
         if(item == null) return;
 
         ItemMeta itemMeta = item.getItemMeta();
@@ -259,6 +347,8 @@ public class UGItem {
 
     public static UGItem getFromItemStack(ItemStack item){
         ItemMeta itemMeta = item.getItemMeta();
+        if(itemMeta == null) return null;
+
         NamespacedKey powerKey = new NamespacedKey(UnlimitedGrind.getInstance(), "power");
         if(itemMeta.getPersistentDataContainer().has(powerKey)) {
             NamespacedKey passifKey = new NamespacedKey(UnlimitedGrind.getInstance(), "passifIdArray");

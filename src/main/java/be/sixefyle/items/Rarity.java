@@ -1,24 +1,24 @@
 package be.sixefyle.items;
 
 
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.format.TextColor;
 
 import java.util.Random;
 
 public enum Rarity {
-    COMMON(ChatColor.WHITE, "Common", 55.0, 0),
-    MAGIC(ChatColor.BLUE, "Magic", 30.0, 1),
-    RARE(ChatColor.YELLOW, "Rare", 14.0, 2),
-    LEGENDARY(ChatColor.GOLD, "Legendary", 0.95, 3),
-    MYTHIC(ChatColor.AQUA, "Mythic", 0.05, 5),
+    COMMON(TextColor.color(213, 213, 213), "Common", 55.0, 0),
+    MAGIC(TextColor.color(62, 123, 255), "Magic", 30.0, 1),
+    RARE(TextColor.color(246, 255, 37), "Rare", 14.0, 2),
+    LEGENDARY(TextColor.color(255, 163, 64), "Legendary", 0.95, 3),
+    MYTHIC(TextColor.color(70, 242, 255), "Mythic", 0.05, 5),
     ;
 
-    private final ChatColor color;
+    private final TextColor color;
     private final String name;
     private final double dropWeight;
     private final int bonusAttributeAmount;
 
-    Rarity(ChatColor color, String name, double dropWeight, int bonusAttributeAmount) {
+    Rarity(TextColor color, String name, double dropWeight, int bonusAttributeAmount) {
         this.color = color;
         this.name = name;
         this.dropWeight = dropWeight;
@@ -29,7 +29,7 @@ public enum Rarity {
         return dropWeight;
     }
 
-    public ChatColor getColor() {
+    public TextColor getColor() {
         return color;
     }
 

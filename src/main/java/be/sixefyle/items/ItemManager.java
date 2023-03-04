@@ -1,14 +1,11 @@
 package be.sixefyle.items;
 
 import be.sixefyle.UnlimitedGrind;
-import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.passifs.interfaces.OnEquip;
 import be.sixefyle.items.passifs.interfaces.OnMeleeHit;
 import be.sixefyle.items.passifs.Passif;
 import be.sixefyle.items.passifs.interfaces.OnReceiveDamage;
 import be.sixefyle.utils.NumberUtils;
-import net.kyori.adventure.text.Component;
-import net.md_5.bungee.api.chat.hover.content.Item;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
@@ -93,7 +90,7 @@ public class ItemManager implements Listener {
     public void updateItemLore(PlayerJoinEvent e){
         Player player = e.getPlayer();
         for (ItemStack itemStack : player.getInventory()) {
-            UGItem.updateItemStackLorePassif(itemStack);
+            UGItem.updateItemStackLore(itemStack);
         }
     }
 

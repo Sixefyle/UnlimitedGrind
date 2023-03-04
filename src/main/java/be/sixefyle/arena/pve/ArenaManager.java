@@ -58,7 +58,7 @@ public class ArenaManager {
         arenaManagers.put(world, this);
     }
 
-    public void respawnPlayer(){
+    public void respawnPlayers(){
         Player player;
         Location loc;
         for (UGPlayer ugPlayer : ugPlayers) {
@@ -80,7 +80,7 @@ public class ArenaManager {
             @Override
             public void run() {
                 if(wave.isEnd()){
-                    respawnPlayer();
+                    respawnPlayers();
 
                     wave.setCreatureToSpawnAmount(newAmount);
                     wave.start(arenaPower, currentWave);
@@ -110,7 +110,10 @@ public class ArenaManager {
             crystalGain = Math.pow(currentWave, 1.14)-1; //TODO: magic number
             islandBank = IridiumSkyblock.getInstance().getIslandManager().getIslandBank(island.get(), IridiumSkyblock.getInstance().getBankItems().crystalsBankItem);
             islandBank.setNumber(islandBank.getNumber() + crystalGain);
-            ugPlayer.getPlayer().sendMessage(Component.text("You got " + NumberUtils.format(crystalGain) + " crystals!"));
+            ugPlayer.sendMessageComponents(
+                    List.of(Component.text("§e§lThe arena as ended !"),
+                            Component.text("§7You got §a" + NumberUtils.format(crystalGain) + "§7 crystals!"))
+                    );
         }
 
         WorldManager.deleteWorld(world);

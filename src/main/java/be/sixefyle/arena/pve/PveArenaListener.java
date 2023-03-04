@@ -10,7 +10,6 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public class PveArenaListener implements Listener {
@@ -20,7 +19,7 @@ public class PveArenaListener implements Listener {
         Entity entity = e.getEntity();
         if(entity.hasMetadata("world") && entity.hasMetadata("power") && entity.hasMetadata("wave")){
             ArenaManager arenaManager = ArenaManager.getArenaManagers().get(entity.getWorld());
-            arenaManager.getWave().getCreatures().remove(entity);
+            arenaManager.getWave().getAliveCreatures().remove(entity);
             e.getDrops().clear();
 
             FileConfiguration config = UnlimitedGrind.getInstance().getConfig();

@@ -9,16 +9,20 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 
 public class CombatListener implements Listener {
@@ -47,6 +51,7 @@ public class CombatListener implements Listener {
                 }
             }
         }
+        if(e.getFinalDamage() <= 0) return;
 
         Location damageIndicatorLoc = e.getEntity().getLocation().clone();
 
@@ -63,10 +68,30 @@ public class CombatListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityAttack(EntityDamageByEntityEvent e){
         if(e.getDamager() instanceof Damageable ent && ent.hasMetadata("power")) {
-            double newDamage = Math.pow(ent.getMetadata("power").get(0).asDouble(),
+            double newDamage = e.getDamage() + Math.pow(ent.getMetadata("power").get(0).asDouble(),
                     UnlimitedGrind.getInstance().getConfig().getDouble("power.efficiencyDamage"));
 
             e.setDamage(newDamage);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerTakeDamageByEntity(EntityDamageByEntityEvent e){
+        if(e.getEntity() instanceof Player player){
+            UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+
+            ugPlayer.takeDamage(e.getDamage() * (1 - ugPlayer.getDamageReduction()));
+            e.setDamage(0);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerTakeDamage(EntityDamageEvent e){
+        if(e.getEntity() instanceof Player player){
+            UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+
+            ugPlayer.takeDamage(e.getDamage() * (1 - ugPlayer.getDamageReduction()));
+            e.setDamage(0);
         }
     }
 

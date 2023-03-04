@@ -1,8 +1,5 @@
 package be.sixefyle.utils;
 
-import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-
 import java.text.DecimalFormat;
 
 public class NumberUtils {
@@ -18,7 +15,7 @@ public class NumberUtils {
         if (value >= 3 && base < suffix.length) {
             return new DecimalFormat("#0.0").format(number / Math.pow(10, base * 3)) + suffix[base];
         } else {
-            return new DecimalFormat("#,##0").format(number);
+            return new DecimalFormat("#,##0.0").format(number);
         }
     }
 }

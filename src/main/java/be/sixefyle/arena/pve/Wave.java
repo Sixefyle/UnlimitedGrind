@@ -16,14 +16,14 @@ public class Wave {
 
     private int creatureToSpawn;
     private List<Location> spawnLocs;
-    private List<Damageable> creatures;
+    private List<Damageable> aliveCreatures;
     private World world;
     private List<UGPlayer> players;
 
     public Wave(int creatureToSpawn, List<Location> spawnLocs, World world, List<UGPlayer> players) {
         this.creatureToSpawn = creatureToSpawn;
         this.spawnLocs = spawnLocs;
-        this.creatures = new ArrayList<>();
+        this.aliveCreatures = new ArrayList<>();
         this.world = world;
         this.players = players;
     }
@@ -33,11 +33,11 @@ public class Wave {
     }
 
     public boolean isEnd(){
-        return creatures.size() <= 2;
+        return aliveCreatures.size() <= 2;
     }
 
     public void end(){
-        for (Damageable creature : creatures) {
+        for (Damageable creature : aliveCreatures) {
             creature.remove();
         }
     }
@@ -75,8 +75,8 @@ public class Wave {
             currentEntity.setMetadata("world", new FixedMetadataValue(UnlimitedGrind.getInstance(), world));
             currentEntity.setMetadata("wave", new FixedMetadataValue(UnlimitedGrind.getInstance(), currentWave));
 
-            double newHealth =  currentEntity.getMaxHealth() + currentEntity.getMaxHealth() *
-                    Math.pow(power, 1.02912);//TODO: magic number
+            double newHealth = currentEntity.getMaxHealth() + currentEntity.getMaxHealth() *
+                    Math.pow(power, 1.02112);//TODO: magic number
 
             currentEntity.setMaxHealth(newHealth);
             currentEntity.setHealth(newHealth);
@@ -91,7 +91,7 @@ public class Wave {
             }
             addGlowToEntity(currentEntity, ChatColor.WHITE);
 
-            creatures.add(currentEntity);
+            aliveCreatures.add(currentEntity);
         }
     }
 
@@ -109,7 +109,7 @@ public class Wave {
         }
     }
 
-    public List<Damageable> getCreatures() {
-        return creatures;
+    public List<Damageable> getAliveCreatures() {
+        return aliveCreatures;
     }
 }

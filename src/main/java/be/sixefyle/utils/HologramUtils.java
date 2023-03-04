@@ -24,7 +24,7 @@ public class HologramUtils {
                 NumberUtils.getRandomNumber(-0.07, 0.07)
         );
 
-        createTimed(damageIndicatorLoc, new ArrayList<>(Collections.singleton(damage)), color, 25);
+        createTimed(damageIndicatorLoc, List.of(damage), color, 25);
     }
 
     public static void createTimed(Location loc, List<String> text, ChatColor color, int ticks){

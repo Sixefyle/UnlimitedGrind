@@ -2,7 +2,6 @@ package be.sixefyle.arena.pve;
 
 public enum CreatureType {
     ZOMBIFIED_PIGLIN(0),
-    CREEPER(0),
     SPIDER(0),
     ZOMBIE(0),
     ZOMBIE_VILLAGER(0),

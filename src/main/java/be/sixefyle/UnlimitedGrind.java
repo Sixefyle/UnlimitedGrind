@@ -100,7 +100,7 @@ public class UnlimitedGrind extends JavaPlugin {
         saveDefaultConfig();
 
         config.set("power.efficiency", 1.29912);
-        config.set("power.efficiencyDamage", 1.06912);
+        config.set("power.efficiencyDamage", 1.00512);
         config.set("power.currencyConvertion", 1.000761);
 
         config.set("lang.spawner.gui.pickup.material", Material.BARRIER.name());
@@ -219,6 +219,8 @@ public class UnlimitedGrind extends JavaPlugin {
 
         config.set("lang.item.name", "%rarity% %prefix%%name% %suffix%");
         config.set("lang.item.power", "&7Item Power: &c" + Symbols.POWER.get() + "%power%");
+        config.set("lang.item.condition", "%condition%");
+
 
         config.set("itemPassif.moreDamage.strength", 0.25);
         config.set("itemPassif.moreDamage.name", "&6More Damage");

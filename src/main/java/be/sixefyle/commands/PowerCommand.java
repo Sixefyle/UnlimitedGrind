@@ -18,12 +18,12 @@ public class PowerCommand implements @Nullable CommandExecutor {
         try{
             if (args.length == 0){
                 UGPlayer ugPlayer = UGPlayer.GetUGPlayer((Player) commandSender);
-                commandSender.sendMessage("Power:" + String.format(Locale.ENGLISH, "%,.0f", ugPlayer.getPower()));
+                commandSender.sendMessage("Power:" + String.format(Locale.ENGLISH, "%,.0f", ugPlayer.getWearedPower()));
             }
             if(args.length == 3){
                 if(args[0].equals("set")){
                     UGPlayer ugPlayer = UGPlayer.GetUGPlayer(Bukkit.getPlayer(args[1]));
-                    ugPlayer.setPower(Double.parseDouble(args[2]));
+                    ugPlayer.setWearedPower(Double.parseDouble(args[2]));
                 }
             }
         }catch (InputMismatchException e){
