@@ -16,6 +16,7 @@ import java.util.UUID;
 
 public class PveArena extends BaseArena {
 
+    //TODO: transfer var to BaseArena
     private final List<Location> creatureSpawnLocations;
     private final List<Location> playerSpawnLocations;
     private UGPlayer owner;

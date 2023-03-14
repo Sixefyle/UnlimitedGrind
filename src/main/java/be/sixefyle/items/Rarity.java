@@ -10,7 +10,7 @@ public enum Rarity {
     MAGIC(TextColor.color(62, 123, 255), "Magic", 30.0, 1),
     RARE(TextColor.color(246, 255, 37), "Rare", 14.0, 2),
     LEGENDARY(TextColor.color(255, 163, 64), "Legendary", 0.95, 3),
-    MYTHIC(TextColor.color(70, 242, 255), "Mythic", 0.05, 5),
+    MYTHIC(TextColor.color(70, 242, 255), "Mythic", 50.05, 4),
     ;
 
     private final TextColor color;
@@ -37,7 +37,7 @@ public enum Rarity {
         return name;
     }
 
-    public int getBonusAttributeAmount() {
+    public int getBonusStatsAmount() {
         return bonusAttributeAmount;
     }
 

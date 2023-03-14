@@ -2,6 +2,7 @@ package be.sixefyle.listeners;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
+import be.sixefyle.enums.Stats;
 import be.sixefyle.enums.Symbols;
 import be.sixefyle.utils.NumberUtils;
 import be.sixefyle.utils.HologramUtils;
@@ -40,7 +41,7 @@ public class CombatListener implements Listener {
 //    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void createFloatingDamage(EntityDamageByEntityEvent e){
+    public void onPlayerAttack(EntityDamageByEntityEvent e){
         // If item is broke
         if(e.getDamager() instanceof Player player){
             ItemStack item = player.getInventory().getItemInMainHand();

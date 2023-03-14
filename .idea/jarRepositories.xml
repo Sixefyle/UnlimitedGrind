@@ -17,6 +17,11 @@
       <option name="url" value="https://jitpack.io" />
     </remote-repository>
     <remote-repository>
+      <option name="id" value="jeff-media-public" />
+      <option name="name" value="jeff-media-public" />
+      <option name="url" value="https://hub.jeff-media.com/nexus/repository/jeff-media-public/" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="enginehub-maven" />
       <option name="name" value="enginehub-maven" />
       <option name="url" value="https://maven.enginehub.org/repo/" />

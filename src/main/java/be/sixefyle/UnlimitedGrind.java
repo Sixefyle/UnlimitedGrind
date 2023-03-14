@@ -23,6 +23,7 @@ import com.iridium.iridiumskyblock.IridiumSkyblock;
 import com.iridium.iridiumskyblock.Upgrade;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import com.iridium.iridiumskyblock.upgrades.UpgradeData;
+import com.jeff_media.armorequipevent.ArmorEquipEvent;
 import fr.skytasul.glowingentities.GlowingEntities;
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import net.milkbowl.vault.economy.Economy;
@@ -55,6 +56,8 @@ public class UnlimitedGrind extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+
+        ArmorEquipEvent.registerListener(this);
         Bukkit.getPluginManager().registerEvents(new BasicListeners(), this);
         Bukkit.getPluginManager().registerEvents(new CombatListener(), this);
         Bukkit.getPluginManager().registerEvents(new BlockGeneratorListener(), this);
@@ -209,6 +212,8 @@ public class UnlimitedGrind extends JavaPlugin {
         config.addDefault("lang.spawner.error.minSpeedReached", "&cThe minimum spawner speed as been reached!");
         config.addDefault("lang.spawner.error.maxStackUpgradeReached", "&cThe maximum spawner stack as been reached!");
         config.addDefault("lang.spawner.error.maxRareDropChance", "&cThe maximum rare drop chance as been reached!");
+
+        config.addDefault("lang.item.error.notEnoughPower", "You need more power to equip this item!");
 
         config.set("creature.health", "&a" + Symbols.HEALTH.get() + " &a%currentHealth%&7/%maxHealth%");
         config.set("creature.power", "&c" + Symbols.POWER.get() + " %power%");

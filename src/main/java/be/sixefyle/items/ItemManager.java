@@ -86,13 +86,13 @@ public class ItemManager implements Listener {
         return passifIDs;
     }
 
-    @EventHandler
-    public void updateItemLore(PlayerJoinEvent e){
-        Player player = e.getPlayer();
-        for (ItemStack itemStack : player.getInventory()) {
-            UGItem.updateItemStackLore(itemStack);
-        }
-    }
+//    @EventHandler
+//    public void updateItemLore(PlayerJoinEvent e){
+//        Player player = e.getPlayer();
+//        for (ItemStack itemStack : player.getInventory()) {
+//            UGItem.updateItemStackLore(itemStack);
+//        }
+//    }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onDoDamage(EntityDamageByEntityEvent e) {

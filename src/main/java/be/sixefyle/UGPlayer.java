@@ -3,6 +3,7 @@ package be.sixefyle;
 import be.sixefyle.arena.Arena;
 import be.sixefyle.arena.BaseArena;
 import be.sixefyle.arena.pve.PveArena;
+import be.sixefyle.enums.Stats;
 import be.sixefyle.enums.Symbols;
 import be.sixefyle.exception.PlayerNotExist;
 import be.sixefyle.group.Group;
@@ -16,7 +17,6 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
-import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
@@ -24,7 +24,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -54,6 +53,8 @@ public class UGPlayer {
     private double maxHealth;
     private double currentHealth;
 
+    private HashMap<Stats, Double> stats = new HashMap<>();
+
     public UGPlayer(Player player) {
         if(playerMap.containsKey(player.getUniqueId())) return;
         this.player = player;
@@ -70,6 +71,10 @@ public class UGPlayer {
             maxPower = 0;
             level = 1;
             experience = 0;
+
+            stats.put(Stats.CRITICAL_DAMAGE, 1.4);
+            stats.put(Stats.LIFE_STEAL, 0.0);
+            stats.put(Stats.HEALTH, 0.0);
         }
 
         initScoreboard();
@@ -106,8 +111,6 @@ public class UGPlayer {
     public void updateScoreboardLine(){
         Island island = ugIsland.getIsland().get();
         Bukkit.getScheduler().runTaskTimer(UnlimitedGrind.getInstance(), () -> {
-            updateWearedPower();
-
             scoreboard.getLines().set(0,"         #{f79f07}&l⭐#{f0aa32} Rank " + ugIsland.getIsland().get().getRank() + " #{f79f07}&l⭐");
             scoreboard.getLines().set(3,"  #{e23f22}▸#{E6EED6} Power &c" + NumberUtils.format(wearedPower) + Symbols.POWER.get());
             scoreboard.getLines().set(4,"  #{e23f22}▸#{E6EED6} Max Power &c" + NumberUtils.format(maxPower) + Symbols.POWER.get());
@@ -212,6 +215,11 @@ public class UGPlayer {
         return itemPower - getMaxWearablePower();
     }
 
+    public boolean canEquipItem(UGItem ugItem){
+        if(ugItem == null) return true;
+        return getMaxWearablePower() >= ugItem.getPower();
+    }
+
     public void updateAllItemsPowerConditionLore(){
         UGItem ugItem;
         for (ItemStack content : player.getInventory().getContents()) {
@@ -250,30 +258,30 @@ public class UGPlayer {
         return (playerArmor / (playerArmor + 15000));
     }
 
-    public double getBonusHealthFromArmor(){
-        double bonusHealth = 0;
-        ItemMeta itemMeta;
-        NamespacedKey healthKey = new NamespacedKey(UnlimitedGrind.getInstance(), "bonusHealth");
-        for (ItemStack armorContent : player.getInventory().getArmorContents()) {
-            if(armorContent == null) continue;
-
-            itemMeta = armorContent.getItemMeta();
-            if(itemMeta == null) continue;
-
-            if(itemMeta.getPersistentDataContainer().has(healthKey, PersistentDataType.DOUBLE)){
-                bonusHealth += itemMeta.getPersistentDataContainer().get(healthKey, PersistentDataType.DOUBLE);
-            }
-        }
-        return bonusHealth;
-    }
+//    public double getBonusHealthFromArmor(){
+//        double bonusHealth = 0;
+//        ItemMeta itemMeta;
+//        NamespacedKey healthKey = new NamespacedKey(UnlimitedGrind.getInstance(), "bonusHealth");
+//        for (ItemStack armorContent : player.getInventory().getArmorContents()) {
+//            if(armorContent == null) continue;
+//
+//            itemMeta = armorContent.getItemMeta();
+//            if(itemMeta == null) continue;
+//
+//            if(itemMeta.getPersistentDataContainer().has(healthKey, PersistentDataType.DOUBLE)){
+//                bonusHealth += itemMeta.getPersistentDataContainer().get(healthKey, PersistentDataType.DOUBLE);
+//            }
+//        }
+//        return bonusHealth;
+//    }
 
     public void setCurrentHealthOnConnect(){
-        maxHealth = baseHealth + getBonusHealthFromArmor();
+        maxHealth = baseHealth + getStatValue(Stats.HEALTH);
         setHealth((player.getHealth() / player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()) * maxHealth);
     }
 
     public void updateBonusHealthFromArmor(){
-        maxHealth = baseHealth + getBonusHealthFromArmor();
+        maxHealth = baseHealth + getStatValue(Stats.HEALTH);
         if(currentHealth > maxHealth){
             setHealth(maxHealth);
         }
@@ -340,11 +348,17 @@ public class UGPlayer {
     }
 
 
-    public List<ItemStack> getArmorAndShield(){
+    public List<ItemStack> getArmorAndOffHand(){
         List<ItemStack> armor = new ArrayList<>(Arrays.asList(player.getInventory().getArmorContents()));
         armor.add(player.getInventory().getItemInOffHand());
 
         return armor;
+    }
+
+    public List<ItemStack> getEquippedItems(){
+        List<ItemStack> items = getArmorAndOffHand();
+        items.add(player.getInventory().getItemInMainHand());
+        return items;
     }
 
     public void shouldAllowArmorChange(boolean bool){
@@ -360,6 +374,51 @@ public class UGPlayer {
                 if(armorContent == null) continue;
                 armorContent.addUnsafeEnchantment(Enchantment.BINDING_CURSE, 1);
             }
+        }
+    }
+
+    public void setupStatsFromEquippedItems(){
+        UGItem ugItem;
+        for (ItemStack item : getEquippedItems()) {
+            if(item == null) continue;
+            ugItem = UGItem.getFromItemStack(item);
+            if(ugItem == null) continue;
+            ugItem.getStatsMap().forEach(this::addStatValue);
+        }
+    }
+
+    public HashMap<Stats, Double> getStats() {
+        return stats;
+    }
+
+    public void updateStatsFromItem(UGItem newItem, UGItem oldItem){
+        if(newItem != null) {
+            newItem.getStatsMap().forEach((stat, value) -> {
+                if(stats.containsKey(stat)){
+                    addStatValue(stat, value);
+                }
+            });
+        }
+        if(oldItem != null){
+            oldItem.getStatsMap().forEach((stat, value) -> {
+                if(stats.containsKey(stat)){
+                    addStatValue(stat, -value);
+                }
+            });
+        }
+    }
+
+    public double getStatValue(Stats stat) {
+        return stats.get(stat);
+    }
+
+    public void setStatValue(Stats stat, double value) {
+        stats.replace(stat, value);
+    }
+
+    public void addStatValue(Stats stat, double toAdd){
+        if(stats.containsKey(stat)){
+            setStatValue(stat, stats.get(stat) + toAdd);
         }
     }
 
