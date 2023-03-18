@@ -19,9 +19,11 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDispenseArmorEvent;
 import org.bukkit.event.block.BlockDropItemEvent;
+import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
@@ -33,7 +35,7 @@ import java.util.Optional;
 
 public class BasicListeners implements Listener {
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerJoin(PlayerJoinEvent e){
         Player player = e.getPlayer();
         UGPlayer ugPlayer;
@@ -48,8 +50,12 @@ public class BasicListeners implements Listener {
                 ugItem.updateLore();
                 ugItem.updateConditionLore(ugPlayer);
             }
-
             ugPlayer.setupStatsFromEquippedItems();
+
+            //Wait 10 ticks to be sure that all before connecting stuff can be do
+            Bukkit.getScheduler().runTaskLater(UnlimitedGrind.getInstance(), () -> {
+                ugPlayer.setConnecting(false);
+            }, 10);
         }
     }
 
@@ -78,8 +84,7 @@ public class BasicListeners implements Listener {
                 }
             }
 
-            double newHealth = damageable.getMaxHealth() +
-                    Math.pow(maxPower, 1.02112);
+            double newHealth = damageable.getMaxHealth()+(damageable.getMaxHealth()*(maxPower/20000))*(Math.pow(maxPower,.78)/100+1); //TODO: magic number
 
             damageable.setMaxHealth(newHealth);
             damageable.setHealth(newHealth);
@@ -132,19 +137,12 @@ public class BasicListeners implements Listener {
         }
     }
 
-//    @EventHandler
-//    public void onPickupItem(PlayerAttemptPickupItemEvent e){
-//        Player player = e.getPlayer();
-//        ItemStack itemStack = e.getItem().getItemStack();
-//        UGItem ugItem = UGItem.getFromItemStack(itemStack);
-//
-//        if(player.getInventory().getItemInMainHand().equals(itemStack)){
-//            UGPlayer.GetUGPlayer(player).updateStatsFromItem(ugItem, null);
-//        }
-//
-//        if(ugItem == null) return;
-//        ugItem.updateConditionLore(UGPlayer.GetUGPlayer(player));
-//    }
+    @EventHandler
+    public void onItemEnchant(EnchantItemEvent e){
+        UGItem ugItem = UGItem.getFromItemStack(e.getItem());
+        if(ugItem == null) return;
+        Bukkit.getScheduler().runTaskLater(UnlimitedGrind.getInstance(), ugItem::updateLore, 1);
+    }
 
     @EventHandler
     public void onPlayerRegenHealth(EntityRegainHealthEvent e){
@@ -156,16 +154,21 @@ public class BasicListeners implements Listener {
         }
     }
 
-    @EventHandler
-    public void onEquipArmor(PlayerArmorChangeEvent e){
-        UGPlayer ugPlayer = UGPlayer.GetUGPlayer(e.getPlayer());
-        if(ugPlayer == null) return;
-        UGItem newItem = UGItem.getFromItemStack(e.getNewItem());
-        UGItem oldItem = UGItem.getFromItemStack(e.getOldItem());
-        ugPlayer.updateStatsFromItem(newItem, oldItem);
+//    @EventHandler
+//    public void onEquipArmor(PlayerArmorChangeEvent e){
+//        UGPlayer ugPlayer = UGPlayer.GetUGPlayer(e.getPlayer());
+//        if(ugPlayer == null) return;
+//        UGItem newItem = UGItem.getFromItemStack(e.getNewItem());
+//        UGItem oldItem = UGItem.getFromItemStack(e.getOldItem());
+//        ugPlayer.updateStatsFromItem(newItem, oldItem);
+//
+//        ugPlayer.updateWearedPower();
+//        ugPlayer.updateBonusHealthFromStats();
+//    }
 
-        ugPlayer.updateWearedPower();
-        ugPlayer.updateBonusHealthFromArmor();
+    @EventHandler
+    public void onPlayerDie(PlayerDeathEvent e){
+        e.setCancelled(true);
     }
 
     @EventHandler
@@ -190,14 +193,38 @@ public class BasicListeners implements Listener {
     }
 
     @EventHandler
+    public void onEquipArmor(PlayerArmorChangeEvent e){
+        UGPlayer ugPlayer = UGPlayer.GetUGPlayer(e.getPlayer());
+        if(ugPlayer.isConnecting()){
+            return;
+        }
+
+        ItemStack newItem = e.getNewItem();
+        ItemStack oldItem = e.getOldItem();
+
+        UGItem ugNewItem = UGItem.getFromItemStack(newItem);
+        UGItem ugOldItem = UGItem.getFromItemStack(oldItem);
+
+
+        if(ugPlayer.canEquipItem(ugNewItem)) {
+            ugPlayer.updateStatsFromItem(ugNewItem, ugOldItem);
+
+            ugPlayer.updateWearedPower();
+            ugPlayer.setHealthFromStat();
+        }
+    }
+
+    @EventHandler
     public void onTryEquipArmor(ArmorEquipEvent e){
         ItemStack newItem = e.getNewArmorPiece();
         if(newItem == null) return;
-        UGItem ugItem = UGItem.getFromItemStack(e.getNewArmorPiece());
-        if(ugItem == null) return;
+
+        UGItem ugNewItem = UGItem.getFromItemStack(newItem);
+        if(ugNewItem == null) return;
+
         UGPlayer ugPlayer = UGPlayer.GetUGPlayer(e.getPlayer());
 
-        if(!ugPlayer.canEquipItem(ugItem)){
+        if(!ugPlayer.canEquipItem(ugNewItem)){
             e.setCancelled(true);
             e.getPlayer().sendMessage(
                     Component.text(UnlimitedGrind.getInstance().getConfig().getString("lang.item.error.notEnoughPower"))
@@ -236,6 +263,7 @@ public class BasicListeners implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent e) {
         Player player = (Player) e.getWhoClicked();
+        if(e.getClickedInventory() == null) return;
 
         if (e.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
             ItemStack item = e.getCurrentItem();

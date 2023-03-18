@@ -18,7 +18,7 @@ import org.bukkit.inventory.ItemStack;
 public class ExplodePassif extends ItemPassif implements OnMeleeHit {
     public ExplodePassif() {
         super(UnlimitedGrind.getInstance().getConfig().getString("itemPassif.explosion.name"),
-                UnlimitedGrind.getInstance().getConfig().getStringList("itemPassif.explosion.lore"),
+                UnlimitedGrind.getInstance().getConfig().getStringList("itemPassif.explosion.description"),
                 UnlimitedGrind.getInstance().getConfig().getDouble("itemPassif.explosion.strength"),
                 true,
                 0.2);

@@ -4,6 +4,7 @@ import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.enums.ComponentColor;
 import be.sixefyle.enums.Stats;
+import be.sixefyle.enums.Symbols;
 import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.passifs.Passif;
 import be.sixefyle.utils.NumberUtils;
@@ -15,6 +16,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Item;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
@@ -31,7 +33,6 @@ public class UGItem {
     private String prefix;
     private String suffix;
     private final double power;
-    private double critDamage;
     private final Rarity rarity;
     private List<Passif> passifList = new ArrayList<>();
     private HashMap<Stats, Double> statsMap = new HashMap<>();
@@ -87,8 +88,11 @@ public class UGItem {
         DropTable dropTableItem = DropTable.valueOf(item.getType().name());
         ItemCategory itemCategory = dropTableItem.getItemCategory();
         if(itemCategory.equals(ItemCategory.MELEE)) {
-            double weapDamage = Math.pow(getPower(), UnlimitedGrind.getInstance().getConfig().getDouble("power.efficiencyDamage"));
+            double weapDamage = NumberUtils.getRandomNumber(10, 20) + NumberUtils.getRandomNumber (power/500, power/450);//TODO: magic number
             addStats(Stats.ATTACK_DAMAGE, weapDamage, itemMeta, dropTableItem.getSlot());
+
+            double weapStrength = NumberUtils.getRandomNumber(Math.pow(getPower(), .75), Math.pow(getPower(), .73));
+            addStats(Stats.STRENGTH, weapStrength, itemMeta, dropTableItem.getSlot());
 
             double weapAttackSpeed = NumberUtils.getRandomNumber(Stats.ATTACK_SPEED.getMin(), Stats.ATTACK_SPEED.getMax());
             addStats(Stats.ATTACK_SPEED, weapAttackSpeed, itemMeta, dropTableItem.getSlot());
@@ -104,10 +108,12 @@ public class UGItem {
                 add(Stats.BONUS_ATTACK_SPEED);
                 add(Stats.ATTACK_KNOCKBACK);
                 add(Stats.MOVEMENT_SPEED);
-                add(Stats.SWEEPING_RANGE);
-                add(Stats.SWEEPING_DAMAGE);
                 add(Stats.BONUS_CRITICAL_DAMAGE);
                 add(Stats.BONUS_CRITICAL_CHANCE);
+                if(material.name().contains("sword")){
+                    add(Stats.SWEEPING_RANGE);
+                    add(Stats.SWEEPING_DAMAGE);
+                }
             }};
 
             addRandomStats(itemStatsList, itemMeta, dropTableItem.getSlot());
@@ -117,8 +123,14 @@ public class UGItem {
             armorValue = Double.min(armorValue, Stats.ARMOR.getMax());
             addStats(Stats.ARMOR, armorValue, itemMeta, dropTableItem.getSlot());
 
-            double bonusHealth = NumberUtils.getRandomNumber(Math.pow(getPower(), 1.04956), Math.pow(getPower(), 1.05956));
-            addStats(Stats.HEALTH, bonusHealth, itemMeta, dropTableItem.getSlot());
+//            double bonusHealth = NumberUtils.getRandomNumber(Math.pow(getPower(), 1.04956), Math.pow(getPower(), 1.05956));
+//            addStats(Stats.HEALTH, bonusHealth, itemMeta, dropTableItem.getSlot());
+
+            double vitality = NumberUtils.getRandomNumber(Math.pow(getPower(), .57), Math.pow(getPower(), .55));
+            addStats(Stats.VITALITY, vitality, itemMeta, dropTableItem.getSlot());
+
+            double strength = NumberUtils.getRandomNumber(Math.pow(getPower(), .67), Math.pow(getPower(), .65));
+            addStats(Stats.STRENGTH, strength, itemMeta, dropTableItem.getSlot());
 
             if(dropTableItem.getBonusPrimaryStat() != null){
                 Stats bonusPrimaryStat = dropTableItem.getBonusPrimaryStat();
@@ -136,11 +148,14 @@ public class UGItem {
                 add(Stats.BONUS_CRITICAL_DAMAGE);
                 add(Stats.MELEE_DAMAGE_REDUCTION);
                 add(Stats.RANGE_DAMAGE_REDUCTION);
+                add(Stats.RANGE_DAMAGE_REDUCTION);
+                add(Stats.BONUS_STRENGTH);
             }};
 
             addRandomStats(itemStatsList, itemMeta, dropTableItem.getSlot());
         }
         itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 
         setupLore(lore, itemMeta);
         item.setItemMeta(itemMeta);
@@ -149,7 +164,6 @@ public class UGItem {
     public void updateLore(){
         ItemMeta itemMeta = item.getItemMeta();
         setupLore(null, itemMeta);
-        itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
         item.setItemMeta(itemMeta);
     }
 
@@ -168,10 +182,15 @@ public class UGItem {
 
         loreComp.add(Component.text(""));
         setupStatsLore(loreComp, itemMeta);
+        setupEnchantsLore(loreComp);
         setupPassifLore(loreComp);
 
+        if(lore == null && !passifList.isEmpty()) {
+            lore = passifList.get(0).getItemPassif().getLore();
+        }
+
         if(lore != null){
-        loreComp.add(Component.text(""));
+            loreComp.add(Component.text(""));
             for (String s : lore) {
                 loreComp.add(Component.text(PlaceholderUtils.replace(this, s)).color(ComponentColor.LORE.getColor()));
             }
@@ -198,15 +217,15 @@ public class UGItem {
             }
         });
 
-        loreComp.add(Component.text("◆ Primary").color(ComponentColor.GOLD.getColor()).decoration(TextDecoration.ITALIC, false));
+        loreComp.add(Component.text(Symbols.PRIMARY_STATS.get() + " Primary").color(ComponentColor.GOLD.getColor()).decoration(TextDecoration.ITALIC, false));
 
         DropTable dropTableItem = DropTable.valueOf(item.getType().name());
         primaryStats.forEach((itemStat, value) -> {
             Component attributeComp = Component.empty();
             attributeComp = attributeComp
                     .decoration(TextDecoration.ITALIC, false)
-                    .append(Component.text("  ◆ ").color(ComponentColor.GOLD.getColor()))
-                    .append(getStatsValueLien(value, itemStat.isPercent()))
+                    .append(Component.text("  " + Symbols.PRIMARY_STATS.get() + " ").color(ComponentColor.GOLD.getColor()))
+                    .append(getStatsValueLine(value, itemStat.isPercent()))
                     .color(itemStat.equals(dropTableItem.getBonusPrimaryStat()) ? ComponentColor.ITEM_SPECIAL_STAT.getColor() : ComponentColor.NEUTRAL.getColor())
                     .append(Component.text(itemStat.getDisplayName()));
             loreComp.add(attributeComp);
@@ -214,13 +233,13 @@ public class UGItem {
 
         if(secondaryStats.size() > 0) {
             loreComp.add(Component.text(" "));
-            loreComp.add(Component.text("◇ Secondary").color(ComponentColor.GOLD.getColor()).decoration(TextDecoration.ITALIC, false));
+            loreComp.add(Component.text(Symbols.SECONDARY_STATS.get() + " Secondary").color(ComponentColor.GOLD.getColor()).decoration(TextDecoration.ITALIC, false));
             secondaryStats.forEach((itemStat, value) -> {
                 Component attributeComp = Component.empty();
                 attributeComp = attributeComp
                         .decoration(TextDecoration.ITALIC, false)
-                        .append(Component.text("  ◇ ").color(ComponentColor.GOLD.getColor()))
-                        .append(getStatsValueLien(value, itemStat.isPercent()))
+                        .append(Component.text("  " + Symbols.SECONDARY_STATS.get() + " ").color(ComponentColor.GOLD.getColor()))
+                        .append(getStatsValueLine(value, itemStat.isPercent()))
                         .color(itemStat.equals(dropTableItem.getBonusPrimaryStat()) ? ComponentColor.ITEM_SPECIAL_STAT.getColor() : ComponentColor.NEUTRAL.getColor())
                         .append(Component.text(itemStat.getDisplayName()));
                 loreComp.add(attributeComp);
@@ -228,15 +247,42 @@ public class UGItem {
         }
     }
 
-    private Component getStatsValueLien(Double value, boolean isPercent){
+    private Component getStatsValueLine(Double value, boolean isPercent){
         Component component = Component.empty();
         component = component
                 .color(value > 0 ? ComponentColor.FINE.getColor() : ComponentColor.ERROR.getColor())
-                .append(Component.text(isPercent ? String.format(Locale.ENGLISH, "%.2f", value * 100) : String.format(Locale.ENGLISH, "%,.1f", value)))
+                .append(Component.text(isPercent ? String.format(Locale.ENGLISH, "%.2f", value * 100) : String.format(Locale.ENGLISH, "%,.0f", value)))
                 .append(isPercent ? Component.text("%") : Component.empty())
                 .append(Component.text(" "));
 
         return component;
+    }
+
+    private void setupEnchantsLore(List<Component> loreComp){
+        if(item.getEnchantments().size() <= 0) return;
+
+        int enchantPerLine = 3;
+        int enchantIndex = 0;
+        Iterator<Enchantment> iterator = item.getEnchantments().keySet().iterator();
+
+        loreComp.add(Component.text(" "));
+        loreComp.add(Component.text(Symbols.ENCHANTS.get() + " Enchants").color(ComponentColor.GOLD.getColor()).decoration(TextDecoration.ITALIC, false));
+        Component currentComp = Component.empty();
+        Enchantment currentEnchant;
+        while (iterator.hasNext()){
+            currentEnchant = iterator.next();
+            currentComp = currentComp
+                    .decoration(TextDecoration.ITALIC, false)
+                    .color(ComponentColor.NEUTRAL.getColor())
+                    .append(currentEnchant.displayName(item.getEnchantmentLevel(currentEnchant)))
+                    .append(Component.text(iterator.hasNext() ? ", " : ""));
+
+            if(++enchantIndex % enchantPerLine == 0){
+                loreComp.add(currentComp);
+                currentComp = Component.text("");
+            }
+        }
+        loreComp.add(currentComp);
     }
 
     private void setupPassifLore(List<Component> loreComp){
@@ -259,8 +305,8 @@ public class UGItem {
 
         if(itemStat.isAttribute()){
             randomArmorAttribute = new AttributeModifier(UUID.randomUUID(),
-                    "random.attribute." + itemStat.toString().toLowerCase(),
-                    Math.random() * value,
+                    "attribute." + itemStat.toString().toLowerCase(),
+                    value,
                     itemStat.isPercent() ? AttributeModifier.Operation.MULTIPLY_SCALAR_1 : AttributeModifier.Operation.ADD_NUMBER,
                     slot);
 
@@ -314,10 +360,6 @@ public class UGItem {
 
     public String getSuffix() {
         return suffix;
-    }
-
-    public double getCritDamage() {
-        return critDamage;
     }
 
     public HashMap<Stats, Double> getStatsMap() {
@@ -397,7 +439,6 @@ public class UGItem {
                     }
                 }
             }
-
             return new UGItem(item, Rarity.valueOf(rarity), power, passifs, statsMap);
         }
         return null;

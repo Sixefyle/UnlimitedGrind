@@ -9,6 +9,7 @@ public abstract class ItemPassif {
     private List<String> description;
     private String name;
     private String itemPrefixName;
+    private List<String> lore;
 
     private boolean isStrenghtPercentage;
     private double strength;
@@ -31,12 +32,25 @@ public abstract class ItemPassif {
         this.isStrenghtPercentage = isStrenghtPercentage;
     }
 
+    public ItemPassif(String name, String itemPrefixName, List<String> description, List<String> lore, double strength, boolean isStrenghtPercentage, double mythicBonus) {
+        this.description = description;
+        this.name = name;
+        this.itemPrefixName = itemPrefixName;
+        this.strength = strength;
+        this.mythicBonus = mythicBonus;
+        this.isStrenghtPercentage = isStrenghtPercentage;
+        this.lore = lore;
+    }
     public List<String> getDescription() {
         return description;
     }
 
     public String getName() {
         return name;
+    }
+
+    public List<String> getLore() {
+        return lore;
     }
 
     public double getStrength() {

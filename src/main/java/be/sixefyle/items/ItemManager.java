@@ -16,6 +16,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -40,8 +41,8 @@ public class ItemManager implements Listener {
     }
 
     public static UGItem generateRandomItem(ItemCategory itemCategory, double power){
-        double minPower = power - (power % 100);
-        double maxPower = minPower + 100;
+        double minPower = power - (power % 500);
+        double maxPower = minPower + 1000;
         double itemPower = NumberUtils.getRandomNumber(minPower, maxPower);
 
         DropTable itemType = DropTable.values()[(int) (Math.random() * DropTable.values().length)];
@@ -85,14 +86,6 @@ public class ItemManager implements Listener {
         }
         return passifIDs;
     }
-
-//    @EventHandler
-//    public void updateItemLore(PlayerJoinEvent e){
-//        Player player = e.getPlayer();
-//        for (ItemStack itemStack : player.getInventory()) {
-//            UGItem.updateItemStackLore(itemStack);
-//        }
-//    }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onDoDamage(EntityDamageByEntityEvent e) {
@@ -155,6 +148,12 @@ public class ItemManager implements Listener {
         }
     }
 
+    public static void doOnEquipForEquippedItems(Player player){
+        ItemStack heldItem = player.getInventory().getItemInMainHand();
+        int[] passifIDs = getItemPassifArray(heldItem);
+        onEquip(passifIDs, player, heldItem);
+    }
+
     @EventHandler
     public void onChangeHeldItem(PlayerItemHeldEvent e){
         ItemStack newItem = e.getPlayer().getInventory().getItem(e.getNewSlot());
@@ -172,12 +171,12 @@ public class ItemManager implements Listener {
         onUnequip(passifIDs, e.getPlayer(), droppedItem);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void doItemPassifOnPlayerJoin(PlayerJoinEvent e){
-        Player player = e.getPlayer();
-        ItemStack heldItem = player.getInventory().getItemInMainHand();
-        int[] passifIDs = getItemPassifArray(heldItem);
-        onEquip(passifIDs, player, heldItem);
+        //fuck it
+        Bukkit.getScheduler().runTaskLater(UnlimitedGrind.getInstance(), () -> {
+            doOnEquipForEquippedItems(e.getPlayer());
+        }, 10);
     }
 
     @EventHandler
@@ -190,5 +189,10 @@ public class ItemManager implements Listener {
                 onEquip(passifIDs, player, pickedItem);
             }
         }, 1);
+    }
+
+    @EventHandler
+    public void onCraftItem(CraftItemEvent e){
+        ItemStack craftedItem = e.getCurrentItem();
     }
 }

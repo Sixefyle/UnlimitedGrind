@@ -69,8 +69,10 @@ public class CombatListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityAttack(EntityDamageByEntityEvent e){
         if(e.getDamager() instanceof Damageable ent && ent.hasMetadata("power")) {
-            double newDamage = e.getDamage() + Math.pow(ent.getMetadata("power").get(0).asDouble(),
-                    UnlimitedGrind.getInstance().getConfig().getDouble("power.efficiencyDamage"));
+            double power = ent.getMetadata("power").get(0).asDouble();
+            double newDamage = e.getDamage() * (power/300 + 1);
+
+            System.out.println(e.getDamage() + " " + newDamage);
 
             e.setDamage(newDamage);
         }

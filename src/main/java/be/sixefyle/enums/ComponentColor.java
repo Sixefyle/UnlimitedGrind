@@ -8,8 +8,9 @@ public enum ComponentColor {
     WARNING(TextColor.color(249, 255, 43)),
     GOLD(TextColor.color(255, 208, 72)),
     NEUTRAL(TextColor.color(171, 168, 168)),
-    LORE(TextColor.color(146, 124, 20)),
+    LORE(TextColor.color(146, 99, 13)),
     ITEM_SPECIAL_STAT(TextColor.color(172, 29, 164)),
+    ARMOR(TextColor.color(34, 141, 241)),
     ;
 
     TextColor color;

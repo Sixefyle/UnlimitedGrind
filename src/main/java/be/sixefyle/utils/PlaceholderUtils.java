@@ -2,6 +2,7 @@ package be.sixefyle.utils;
 
 import be.sixefyle.BetterSpawner;
 import be.sixefyle.UGPlayer;
+import be.sixefyle.enums.Symbols;
 import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.UGItem;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
@@ -79,7 +80,7 @@ public class PlaceholderUtils {
 
     public static String replace(UGItem ugItem, UGPlayer ugPlayer, String s){
         if(ugItem.getPower() > ugPlayer.getMaxWearablePower()){
-            s = s.replaceAll("%condition%", "You need " + NumberUtils.format(ugPlayer.neededPower(ugItem.getPower())) + " more max power to equip this!");
+            s = s.replaceAll("%condition%", Symbols.DANGER.get() + "You need " + NumberUtils.format(ugPlayer.neededPower(ugItem.getPower())) + " more max power to equip this!");
         } else {
             s = s.replaceAll("%condition%", "");
         }

@@ -26,7 +26,7 @@ public class ThunderStormPassif extends ItemPassif implements OnReceiveDamage {
     private int radius;
     public ThunderStormPassif() {
         super(UnlimitedGrind.getInstance().getConfig().getString("itemPassif.thunderStorm.name"),
-                UnlimitedGrind.getInstance().getConfig().getStringList("itemPassif.thunderStorm.lore"),
+                UnlimitedGrind.getInstance().getConfig().getStringList("itemPassif.thunderStorm.description"),
                 UnlimitedGrind.getInstance().getConfig().getDouble("itemPassif.thunderStorm.strength"),
                 true,
                 0);

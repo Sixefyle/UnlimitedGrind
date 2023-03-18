@@ -1,6 +1,8 @@
 package be.sixefyle.items.passifs.melee;
 
+import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
+import be.sixefyle.items.UGItem;
 import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.passifs.interfaces.OnEquip;
 import org.bukkit.attribute.Attribute;
@@ -18,10 +20,11 @@ public class LifeConversion extends ItemPassif implements OnEquip {
     public LifeConversion() {
         super(UnlimitedGrind.getInstance().getConfig().getString("itemPassif.lifeConversion.name"),
                 UnlimitedGrind.getInstance().getConfig().getString("itemPassif.lifeConversion.itemPrefixName"),
+                UnlimitedGrind.getInstance().getConfig().getStringList("itemPassif.lifeConversion.description"),
                 UnlimitedGrind.getInstance().getConfig().getStringList("itemPassif.lifeConversion.lore"),
                 UnlimitedGrind.getInstance().getConfig().getDouble("itemPassif.lifeConversion.strength"),
                 true,
-                0.015);
+                1);
         players = new HashMap<>();
     }
 
@@ -30,30 +33,30 @@ public class LifeConversion extends ItemPassif implements OnEquip {
         if(!players.containsKey(player)){
             players.put(player, new ArrayList<>());
         }
-        players.get(player).add(new AttributeModifier(
-                attributeName,
-                -player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(),
-                AttributeModifier.Operation.ADD_NUMBER));
-        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).addModifier(players.get(player).get(0));
 
-        double bonusDamagePercent = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() * getStrength();
+        UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+        ugPlayer.setMaxHealth(1);
+        ugPlayer.setHealthLocked(true);
+
+        double bonusDamagePercent = getStrength() + (UGItem.isMythic(item) ? getMythicBonus() : 0);
         players.get(player).add(new AttributeModifier(
                 attributeName,
                 bonusDamagePercent,
                 AttributeModifier.Operation.MULTIPLY_SCALAR_1));
-        player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).addModifier(players.get(player).get(1));
-        player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
+        player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).addModifier(players.get(player).get(0));
     }
 
     @Override
     public void onUnequip(Player player, ItemStack item) {
         removePassifAttributeModifier(player);
+        UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+        ugPlayer.setHealthLocked(false);
+        ugPlayer.setHealthFromStat();
     }
 
     public void removePassifAttributeModifier(Player player){
         if(players.containsKey(player)){
-            player.getAttribute(Attribute.GENERIC_MAX_HEALTH).removeModifier(players.get(player).get(0));
-            player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).removeModifier(players.get(player).get(1));
+            player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).removeModifier(players.get(player).get(0));
             players.remove(player);
         }
     }

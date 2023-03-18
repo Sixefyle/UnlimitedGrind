@@ -7,10 +7,13 @@ public enum Stats {
     ATTACK_SPEED(Attribute.GENERIC_ATTACK_SPEED,"Attack Speed", true, -3, 3, true, false),
     ARMOR(Attribute.GENERIC_ARMOR,"Armor", true, 1, 60000, true, false),
     HEALTH("bonusHealth","Health", false, 1, Double.MAX_VALUE, true, false),
+    VITALITY("vitality","Vitality", false, 1, Double.MAX_VALUE, true, false),
+    STRENGTH("strength","Strength", false, 1, Double.MAX_VALUE, true, false),
     CRITICAL_DAMAGE("critDamage","Critical Damage", false, .2, .5, true, true),
     CRITICAL_CHANCE("critChance","Critical Chance", false, .03, .08, true, true),
     LIFE_STEAL("lifeSteal", "Life Steal",false, .01, .03, true, true),
 
+    BONUS_STRENGTH("bonusStrength","Strength", false, 1, 150, false, false),
     BONUS_CRITICAL_CHANCE("bonusCritChance","Critical Chance", false, .01, .05, false, true),
     BONUS_CRITICAL_DAMAGE("bonusCritDamage","Critical Damage", false, .1, .25, false, true),
     SWEEPING_RANGE("sweepRange", "Sweep Range",false, .05, .1, false, true),

@@ -75,8 +75,9 @@ public class Wave {
             currentEntity.setMetadata("world", new FixedMetadataValue(UnlimitedGrind.getInstance(), world));
             currentEntity.setMetadata("wave", new FixedMetadataValue(UnlimitedGrind.getInstance(), currentWave));
 
-            double newHealth = currentEntity.getMaxHealth() + currentEntity.getMaxHealth() *
-                    Math.pow(power, 1.02112);//TODO: magic number
+            //TODO: magic number
+            double newHealth =
+                    currentEntity.getMaxHealth()+(currentEntity.getMaxHealth()*(power/20000))*(Math.pow(power,.78)/100+1);
 
             currentEntity.setMaxHealth(newHealth);
             currentEntity.setHealth(newHealth);

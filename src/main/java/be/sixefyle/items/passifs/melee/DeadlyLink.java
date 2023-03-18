@@ -29,7 +29,7 @@ public class DeadlyLink extends ItemPassif implements OnMeleeHit, Stackable {
 
     public DeadlyLink() {
         super(UnlimitedGrind.getInstance().getConfig().getString("itemPassif.deadlyLink.name"),
-                UnlimitedGrind.getInstance().getConfig().getStringList("itemPassif.deadlyLink.lore"),
+                UnlimitedGrind.getInstance().getConfig().getStringList("itemPassif.deadlyLink.description"),
                 UnlimitedGrind.getInstance().getConfig().getDouble("itemPassif.deadlyLink.strength"),
                 false,
                 2);

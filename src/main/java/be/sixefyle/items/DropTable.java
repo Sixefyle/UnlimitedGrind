@@ -44,7 +44,7 @@ public enum DropTable {
 
     BOW(Material.BOW, ItemCategory.DISTANCE, EquipmentSlot.HAND, Stats.MOVEMENT_SPEED),
     CROSSBOW(Material.CROSSBOW, ItemCategory.DISTANCE, EquipmentSlot.HAND, Stats.CRITICAL_DAMAGE),
-    SHIELD(Material.SHIELD, ItemCategory.SHIELD, EquipmentSlot.OFF_HAND, Stats.RANGE_DAMAGE_REDUCTION),
+    SHIELD(Material.SHIELD, ItemCategory.SHIELD, EquipmentSlot.OFF_HAND, Stats.KNOCKBACK_RESISTANCE),
     ;
 
     final Material material;

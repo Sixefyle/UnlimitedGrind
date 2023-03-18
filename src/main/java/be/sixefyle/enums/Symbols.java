@@ -5,9 +5,14 @@ public enum Symbols {
     PLAYER("🔥"),
     POWER("⚔"),
     HEALTH("❤"),
-    COIN("\uD83D\uDCB5"),
+    COIN("○"),
     CRYSTALS("⟡"),
     CRITICS("⚡"),
+    ENCHANTS("☄"),
+    SECONDARY_STATS("◇"),
+    PRIMARY_STATS("◆"),
+    ARMOR("🛡"),
+    DANGER("⚠"),
     ;
 
     private String symbol;

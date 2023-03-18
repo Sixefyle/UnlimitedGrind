@@ -38,18 +38,14 @@
                     </execution>
                 </executions>
             </plugin>
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-jar-plugin</artifactId>-->
-<!--                <version>2.3.1</version>-->
-<!--                <configuration>-->
-<!--                    <outputDirectory>C:/Users/sixef/OneDrive/Bureau/server/plugins</outputDirectory>-->
-<!--                </configuration>-->
-<!--            </plugin>-->
         </plugins>
     </build>
 
     <repositories>
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
         <repository>
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
@@ -144,6 +140,13 @@
             <groupId>com.jeff_media</groupId>
             <artifactId>ArmorEquipEvent</artifactId>
             <version>1.0.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>net.minecraft</groupId>
+            <artifactId>nms</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>C:/Users/sixef/OneDrive/Bureau/server/server.jar</systemPath>
         </dependency>
     </dependencies>
 

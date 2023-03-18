@@ -5,10 +5,7 @@ import be.sixefyle.arena.pve.PveArenaListener;
 import be.sixefyle.commands.*;
 import be.sixefyle.enums.Symbols;
 import be.sixefyle.items.ItemManager;
-import be.sixefyle.listeners.BasicListeners;
-import be.sixefyle.listeners.BlockGeneratorListener;
-import be.sixefyle.listeners.CombatListener;
-import be.sixefyle.listeners.SpawnerListener;
+import be.sixefyle.listeners.*;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
@@ -64,6 +61,7 @@ public class UnlimitedGrind extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new SpawnerListener(), this);
         Bukkit.getPluginManager().registerEvents(new ItemManager(), this);
         Bukkit.getPluginManager().registerEvents(new PveArenaListener(), this);
+        Bukkit.getPluginManager().registerEvents(new StatsListener(), this);
 
         getCommand("ugreload").setExecutor(new ReloadCommand());
         getCommand("power").setExecutor(new PowerCommand());
@@ -229,26 +227,26 @@ public class UnlimitedGrind extends JavaPlugin {
 
         config.set("itemPassif.moreDamage.strength", 0.25);
         config.set("itemPassif.moreDamage.name", "&6More Damage");
-        config.set("itemPassif.moreDamage.lore", new ArrayList<>() {{
+        config.set("itemPassif.moreDamage.description", new ArrayList<>() {{
             add("&7Increase all damage by &e%strength%%&7");
         }});
 
         config.set("itemPassif.explosion.strength", 0.40);
         config.set("itemPassif.explosion.name", "&6Explosion");
-        config.set("itemPassif.explosion.lore", new ArrayList<>() {{
+        config.set("itemPassif.explosion.description", new ArrayList<>() {{
             add("&7Create an explosion on your target damaging all");
             add("&7creature on 5 blocks for &e%strength%%&7 of the damage you dealt");
         }});
 
         config.set("itemPassif.damageReduction.strength", 0.05);
         config.set("itemPassif.damageReduction.name", "&6Rock Solide");
-        config.set("itemPassif.damageReduction.lore", new ArrayList<>() {{
+        config.set("itemPassif.damageReduction.description", new ArrayList<>() {{
             add("&7Reduce all incoming damage by &e%strength%%");
         }});
 
         config.set("itemPassif.thunderStorm.strength", 12.5);
         config.set("itemPassif.thunderStorm.name", "&bThunder Storm");
-        config.set("itemPassif.thunderStorm.lore", new ArrayList<>() {{
+        config.set("itemPassif.thunderStorm.description", new ArrayList<>() {{
             add("&7Small chance to let rain a thunder storm to all");
             add("&7nearby creatures dealing &b%strength%%&7 of the armor power");
         }});
@@ -256,7 +254,7 @@ public class UnlimitedGrind extends JavaPlugin {
         config.set("itemPassif.lethalBlock.strength", 0.05);
         config.set("itemPassif.lethalBlock.name", "&6Lethal Block");
         config.set("itemPassif.lethalBlock.itemPrefixName", "Green's");
-        config.set("itemPassif.lethalBlock.lore", new ArrayList<>() {{
+        config.set("itemPassif.lethalBlock.description", new ArrayList<>() {{
             add("&7Each time you block an attack you gain");
             add("&7a &6Lethal Block&7 stack which increase the");
             add("&7damage by &e%strength%% of received damage&7 for");
@@ -265,7 +263,7 @@ public class UnlimitedGrind extends JavaPlugin {
 
         config.set("itemPassif.deadlyLink.strength", 3);
         config.set("itemPassif.deadlyLink.name", "&6Deadly Link");
-        config.set("itemPassif.deadlyLink.lore", new ArrayList<>() {{
+        config.set("itemPassif.deadlyLink.description", new ArrayList<>() {{
             add("&7Once you hit a creature. he's gonna link up to &e%strength% nearby");
             add("&ecreatures&7 around him for 10sec. Every attack on a");
             add("&7linked creature gonna deal &e55% of the damage&7 to all");
@@ -273,12 +271,15 @@ public class UnlimitedGrind extends JavaPlugin {
             add("&7explode and dealing &e100% of the shared damages&7");
         }});
 
-        config.set("itemPassif.lifeConversion.strength", 0.015);
+        config.set("itemPassif.lifeConversion.strength", 2.5);
         config.set("itemPassif.lifeConversion.name", "&6Life Conversion");
         config.set("itemPassif.lifeConversion.itemPrefixName", "Azellio's");
+        config.set("itemPassif.lifeConversion.description", new ArrayList<>() {{
+            add("&7Reduce your maximum health to &c1 HP&7 and");
+            add("&7increase your damage by &e%strength%%&7.");
+        }});
         config.set("itemPassif.lifeConversion.lore", new ArrayList<>() {{
-            add("&7Reduce your maximum health to &c1 HP&7 and increase");
-            add("&7your damage by &e%strength%% for each HP reduced&7.");
+            add("Who need health if they can't hit you...");
         }});
 
         config.set("pve.arena.rareDropChance", 0.01);
