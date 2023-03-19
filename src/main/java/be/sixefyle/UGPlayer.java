@@ -18,13 +18,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -32,13 +29,6 @@ import java.util.*;
 
 public class UGPlayer {
     public static HashMap<UUID, UGPlayer> playerMap = new HashMap<>();
-    private Player player;
-    private UGIsland ugIsland;
-    private RScoreboard scoreboard;
-    private BaseArena arena;
-    private Group group;
-    private BukkitTask actionBarTask;
-    private BukkitTask scoreboardTask;
 
     public static UGPlayer GetUGPlayer(Player player){
         return playerMap.get(player.getUniqueId());
@@ -54,6 +44,14 @@ public class UGPlayer {
         leavePveArena();
         leaveGroup();
     }
+
+    private Player player;
+    private UGIsland ugIsland;
+    private RScoreboard scoreboard;
+    private BaseArena arena;
+    private Group group;
+    private BukkitTask actionBarTask;
+    private BukkitTask scoreboardTask;
 
     private int level;
     private int experience;
@@ -79,8 +77,8 @@ public class UGPlayer {
         try {
             getPlayerData();
         } catch (PlayerNotExist e) {
-            wearedPower = 0;
-            maxPower = 0;
+            wearedPower = 1;
+            maxPower = 1;
             level = 1;
             experience = 0;
             isHealthLocked = false;
@@ -89,6 +87,7 @@ public class UGPlayer {
             statsMap.put(Stats.CRITICAL_DAMAGE, 1.4);
             statsMap.put(Stats.LIFE_STEAL, 0.0);
             statsMap.put(Stats.HEALTH, 0.0);
+            statsMap.put(Stats.ARMOR, 0.0);
             statsMap.put(Stats.STRENGTH, 0.0);
             statsMap.put(Stats.VITALITY, 0.0);
             statsMap.put(Stats.SWEEPING_RANGE, 1.0);
@@ -134,14 +133,26 @@ public class UGPlayer {
         scoreboardTask = Bukkit.getScheduler().runTaskTimer(UnlimitedGrind.getInstance(), () -> {
             Island island = ugIsland.getIsland().get();
             scoreboard.getLines().set(0, "         #{f79f07}&l⭐#{f0aa32} Rank " + ugIsland.getIsland().get().getRank() + " #{f79f07}&l⭐");
-            scoreboard.getLines().set(3, "  #{e23f22}▸#{E6EED6} Items Power &c" + NumberUtils.format(wearedPower) + Symbols.POWER.get());
-            scoreboard.getLines().set(4, "  #{e23f22}▸#{E6EED6} Max Power &c" + NumberUtils.format(maxPower) + Symbols.POWER.get());
+            updateScoreboardPower();
             scoreboard.getLines().set(5, "  #{e23f22}▸#{E6EED6} Money &e" + NumberUtils.format(UnlimitedGrind.getEconomy().getBalance(player)) + Symbols.COIN.get());
             scoreboard.getLines().set(8, "  #{48bff0}▸#{E4F0D0} Value - " + NumberUtils.format(island.getValue()));
             scoreboard.getLines().set(9, "  #{48bff0}▸#{E4F0D0} Level - " + NumberUtils.format(island.getLevel()));
             scoreboard.getLines().set(11, "    #{48bff0}▹#{E4F0D0} Money - " + island.getMoney() + Symbols.COIN.get());
             scoreboard.getLines().set(12, "    #{48bff0}▹#{E4F0D0} Crystals - " + island.getCrystals() + Symbols.CRYSTALS.get());
         }, 100, 100);
+    }
+
+    public void updateScoreboardPower(){
+        scoreboard.getLines().set(3, "  #{e23f22}▸#{E6EED6} Items Power &c" + NumberUtils.format(wearedPower) + Symbols.POWER.get());
+        scoreboard.getLines().set(4, "  #{e23f22}▸#{E6EED6} Max Power &c" + NumberUtils.format(maxPower) + Symbols.POWER.get());
+    }
+
+    public void updateActionBarStats(){
+        player.sendActionBar(Component.empty()
+                .append(Component.text(Symbols.HEALTH.get() + " " + String.format("%.0f", getHealth()) + "/" + NumberUtils.format(getMaxHealth()) + " ")
+                        .color(getHealthColor()))
+                .append(Component.text( Symbols.ARMOR.get() + " " + String.format("%.0f", getStatValue(Stats.ARMOR)) + " (" + String.format("%.1f", getDamageReduction()*100) + "%)")
+                        .color(ComponentColor.ARMOR.getColor())));
     }
 
     public void startActionBarRefresh(){
@@ -152,14 +163,8 @@ public class UGPlayer {
                     cancel();
                     return;
                 }
-                Component component = Component.empty()
-                                .append(Component.text(Symbols.HEALTH.get() + " " + String.format("%.0f", getHealth()) + "/" + NumberUtils.format(getMaxHealth()) + " ")
-                                                .color(getHealthColor()))
-                                .append(Component.text( Symbols.ARMOR.get() + " " + String.format("%.0f", getArmorValue()) + " (" + String.format("%.1f", getDamageReduction()*100) + "%)")
-                                                .color(ComponentColor.ARMOR.getColor()));
 
-
-                player.sendActionBar(component);
+                updateActionBarStats();
             }
         }.runTaskTimer(UnlimitedGrind.getInstance(), 20, 20);
     }
@@ -202,10 +207,10 @@ public class UGPlayer {
     }
 
     public void setWearedPower(double wearedPower) {
-        this.wearedPower = wearedPower;
+        this.wearedPower = wearedPower + 1;
     }
 
-    public void updateWearedPower(){
+    public void updateEquippedWearedPower(){
         UGItem ugItem;
         double tempPower = 0;
         for (ItemStack content : getEquippedItems()) {
@@ -219,14 +224,33 @@ public class UGPlayer {
             maxPower = wearedPower;
             updateAllItemsPowerConditionLore();
         }
+        updateScoreboardPower();
+    }
+
+    public void updateWearedPower(UGItem newItem, UGItem oldItem){
+        if(newItem != null){
+            wearedPower += newItem.getPower() / getEquippedItems().size();
+            if(wearedPower > maxPower){
+                maxPower = wearedPower;
+                updateAllItemsPowerConditionLore();
+            }
+        }
+        if(oldItem != null){
+            wearedPower -= oldItem.getPower() / getEquippedItems().size();
+        }
+        updateScoreboardPower();
     }
 
     public double getMaxPower() {
         return maxPower;
     }
 
+    public void setMaxPower(double maxPower) {
+        this.maxPower = maxPower;
+    }
+
     public double getMaxWearablePower(){
-        return maxPower + 1000;
+        return maxPower + 100;
     }
 
     public double neededPower(double itemPower){
@@ -254,25 +278,25 @@ public class UGPlayer {
         throw new PlayerNotExist();
     }
 
-    public double getArmorValue() {
-        double armor = 0;
-        ItemMeta itemMeta;
-        for (ItemStack itemStack : getArmorAndOffHand()) {
-            if(itemStack == null) continue;
-
-            itemMeta = itemStack.getItemMeta();
-            if(itemMeta == null) continue;
-            if(itemMeta.hasAttributeModifiers() && itemMeta.getAttributeModifiers(Attribute.GENERIC_ARMOR) != null){
-                for (AttributeModifier attributeModifier : itemMeta.getAttributeModifiers(Attribute.GENERIC_ARMOR)) {
-                    armor += attributeModifier.getAmount();
-                }
-            }
-        }
-        return armor;
-    }
+//    public double getArmorValue() {
+//        double armor = 0;
+//        ItemMeta itemMeta;
+//        for (ItemStack itemStack : getArmorAndOffHand()) {
+//            if(itemStack == null) continue;
+//
+//            itemMeta = itemStack.getItemMeta();
+//            if(itemMeta == null) continue;
+//            if(itemMeta.hasAttributeModifiers() && itemMeta.getAttributeModifiers(Attribute.GENERIC_ARMOR) != null){
+//                for (AttributeModifier attributeModifier : itemMeta.getAttributeModifiers(Attribute.GENERIC_ARMOR)) {
+//                    armor += attributeModifier.getAmount();
+//                }
+//            }
+//        }
+//        return armor;
+//    }
 
     public double getDamageReduction(){
-        double playerArmor = getArmorValue();
+        double playerArmor = getStatValue(Stats.ARMOR);
 
         return (playerArmor / (playerArmor + 15000));
     }
@@ -409,7 +433,7 @@ public class UGPlayer {
         double healthPerc = player.getHealth()/player.getHealthScale();
         setHealthFromStat();
         setHealth(healthPerc * getMaxHealth());
-        updateWearedPower();
+        updateEquippedWearedPower();
     }
 
     public HashMap<Stats, Double> getStatsMap() {

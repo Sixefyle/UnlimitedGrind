@@ -23,7 +23,7 @@ public class PowerCommand implements @Nullable CommandExecutor {
             if(args.length == 3){
                 if(args[0].equals("set")){
                     UGPlayer ugPlayer = UGPlayer.GetUGPlayer(Bukkit.getPlayer(args[1]));
-                    ugPlayer.setWearedPower(Double.parseDouble(args[2]));
+                    ugPlayer.setMaxPower(Double.parseDouble(args[2]));
                 }
             }
         }catch (InputMismatchException e){

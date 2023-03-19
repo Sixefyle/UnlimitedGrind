@@ -29,7 +29,7 @@ public class PveArenaListener implements Listener {
             if(Math.random() <= rareDropChance){
                 UGItem rareItem = ItemManager.generateRandomItem(entity.getMetadata("power").get(0).asDouble());
 
-                Item item = entity.getWorld().dropItemNaturally(entity.getLocation(), rareItem.getItem());
+                Item item = entity.getWorld().dropItemNaturally(entity.getLocation(), rareItem.asItemStack());
                 rareItem.createRarityParticle(item);
             }
         }

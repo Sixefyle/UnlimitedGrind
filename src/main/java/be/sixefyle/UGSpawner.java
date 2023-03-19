@@ -3,20 +3,27 @@ package be.sixefyle;
 import be.sixefyle.utils.PlaceholderUtils;
 import com.iridium.iridiumskyblock.database.Island;
 import me.filoghost.holographicdisplays.api.hologram.Hologram;
-import me.filoghost.holographicdisplays.api.hologram.line.HologramLine;
 import me.filoghost.holographicdisplays.api.hologram.line.TextHologramLine;
-import org.bukkit.Bukkit;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
-public class BetterSpawner {
-    public static HashMap<Location, BetterSpawner> spawners = new HashMap<>();
+public class UGSpawner {
+    public static HashMap<Location, UGSpawner> spawners = new HashMap<>();
 
     private int maxStackAmount = 100;
     private int stackAmount;
@@ -38,7 +45,7 @@ public class BetterSpawner {
         spawners.put(loc, this);
     }
 
-    public BetterSpawner(EntityType entityType, Island island, Location loc) {
+    public UGSpawner(EntityType entityType, Island island, Location loc) {
         this.stackAmount = 1;
         this.entityType = entityType;
         this.power = 0.0;
@@ -50,7 +57,7 @@ public class BetterSpawner {
         init(loc);
     }
 
-    public BetterSpawner(int maxStackAmount, int stackAmount, int maxStackUpgradeLevel, int stackUpgradeLevel, double power, boolean isSilence, double rareDropChance, Location loc, Island island, EntityType entityType) {
+    public UGSpawner(int maxStackAmount, int stackAmount, int maxStackUpgradeLevel, int stackUpgradeLevel, double power, boolean isSilence, double rareDropChance, Location loc, Island island, EntityType entityType) {
         this.maxStackAmount = maxStackAmount;
         this.stackAmount = stackAmount;
         this.maxStackUpgradeLevel = maxStackUpgradeLevel;
@@ -66,7 +73,9 @@ public class BetterSpawner {
 
     public void initSpawner(Location loc){
         spawner = (CreatureSpawner) loc.getBlock().getState();
-        spawner.setSpawnedType(entityType);
+        if(entityType != null){
+            spawner.setSpawnedType(entityType);
+        }
         spawner.setRequiredPlayerRange(50);
         spawner.update();
     }
@@ -76,7 +85,7 @@ public class BetterSpawner {
         FileConfiguration config = UnlimitedGrind.getInstance().getConfig();
         loc = loc.add(0,1,0);
         hologramTitle = UnlimitedGrind.getHolographicApi().createHologram(loc);
-        BetterSpawner betterSpawner = this;
+        UGSpawner betterSpawner = this;
 
         String firstLine = config.getString("spawner.title.typeAndPower");
         String secondLine = config.getString("spawner.title.amount");
@@ -205,23 +214,62 @@ public class BetterSpawner {
 
     public void remove(){
         spawners.remove(spawner.getLocation());
+        hologramTitle.delete();
         spawner.getLocation().getBlock().setType(Material.AIR);
     }
 
+    protected <T, Z> void createNewPersistentDataContainer(ItemMeta itemMeta, String id, PersistentDataType<T, Z> type, Z value){
+        itemMeta.getPersistentDataContainer().set(new NamespacedKey(UnlimitedGrind.getInstance(), id), type, value);
+    }
+
+    public void pickup(Player player){
+        FileConfiguration config = UnlimitedGrind.getInstance().getConfig();
+        ItemStack pickupSpawner = new ItemStack(Material.SPAWNER, 1);
+        ItemMeta pickupSpawnerMeta = pickupSpawner.getItemMeta();
+
+        pickupSpawnerMeta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
+
+        String name = PlaceholderUtils.replace(this, config.getString("lang.spawner.gui.pickedUp.name"));
+        pickupSpawnerMeta.displayName(Component.text(name));
+
+        List<Component> lore = new ArrayList<>();
+        String result;
+        for (String line : config.getStringList("lang.spawner.gui.pickedUp.lore")) {
+            result = PlaceholderUtils.replace(this, line);
+            lore.add(Component.text(result));
+        }
+        pickupSpawnerMeta.lore(lore);
+
+        createNewPersistentDataContainer(pickupSpawnerMeta, "power", PersistentDataType.DOUBLE, getPower());
+        createNewPersistentDataContainer(pickupSpawnerMeta, "amount", PersistentDataType.INTEGER, getStackAmount());
+        createNewPersistentDataContainer(pickupSpawnerMeta, "maxAmount", PersistentDataType.INTEGER, getMaxStackAmount());
+        createNewPersistentDataContainer(pickupSpawnerMeta, "stackUpgradeLevel", PersistentDataType.INTEGER, getStackUpgradeLevel());
+        createNewPersistentDataContainer(pickupSpawnerMeta, "maxStackUpgradeLevel", PersistentDataType.INTEGER, getMaxStackUpgradeLevel());
+        createNewPersistentDataContainer(pickupSpawnerMeta, "rareDropChance", PersistentDataType.DOUBLE, getRareDropChance());
+        createNewPersistentDataContainer(pickupSpawnerMeta, "silence", PersistentDataType.BYTE, (byte) (isSilence() ?  1 : 0));
+        createNewPersistentDataContainer(pickupSpawnerMeta, "entityType", PersistentDataType.STRING, getSpawner().getSpawnedType().name());
+
+        pickupSpawner.setItemMeta(pickupSpawnerMeta);
+
+        player.getInventory().addItem(pickupSpawner);
+        this.remove();
+        player.closeInventory();
+    }
 
     public static double getUgradePrice(double currentPower, int upgradeAmount) {
         int base = 50;
         double growRate = UnlimitedGrind.getInstance().getConfig().getDouble("power.currencyConvertion");
-        double price = 10; //TODO: price
+        double price = 0; //TODO: price
 
         return price;
     }
 
-    public static BetterSpawner getBetterSpawner(Location loc){
+    public static UGSpawner getBetterSpawner(Location loc){
         return spawners.get(loc);
     }
 
-    public static HashMap<Location, BetterSpawner> getSpawners() {
+    public static HashMap<Location, UGSpawner> getSpawners() {
         return spawners;
     }
+
 }

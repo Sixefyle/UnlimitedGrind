@@ -6,9 +6,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class GroupCommand implements CommandExecutor {
+import java.util.ArrayList;
+import java.util.List;
+
+public class GroupCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args) {
@@ -53,5 +59,18 @@ public class GroupCommand implements CommandExecutor {
         }
 
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args) {
+        List<String> completions = new ArrayList<>();
+        if(args.length == 1){
+            completions.add("invite");
+            completions.add("accept");
+            completions.add("decline");
+            completions.add("leave");
+        }
+
+        return completions;
     }
 }

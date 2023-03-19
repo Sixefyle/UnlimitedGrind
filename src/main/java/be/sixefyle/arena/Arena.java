@@ -1,18 +1,21 @@
 package be.sixefyle.arena;
 
-import be.sixefyle.UnlimitedGrind;
 import org.bukkit.Location;
 
-import java.util.Arrays;
 import java.util.List;
 
 public enum Arena {
-    TEST("test",
-            Arrays.asList(new Location(null, 25, 65, 15)),
-            Arrays.asList(new Location(null, 10, 65, 10))),
     ICE("ice",
-            Arrays.asList(new Location(null, -78, 79, 53)),
-            Arrays.asList(new Location(null, -99, 80, 77))),
+            List.of(new Location(null, -78, 79, 53)),
+            List.of(
+                    new Location(null, -99, 80, 77),
+                    new Location(null, -96, 80, 87),
+                    new Location(null, -128, 79, 65),
+                    new Location(null, -108, 79, 35),
+                    new Location(null, -55, 78, 29),
+                    new Location(null, -40, 81, 87),
+                    new Location(null, -79, 80, 101)
+            )),
     ;
 
     private String schematicName;

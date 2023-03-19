@@ -2,16 +2,11 @@ package be.sixefyle.listeners;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
-import be.sixefyle.enums.Stats;
 import be.sixefyle.enums.Symbols;
 import be.sixefyle.utils.NumberUtils;
 import be.sixefyle.utils.HologramUtils;
-import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,10 +15,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 
 public class CombatListener implements Listener {
@@ -70,20 +63,18 @@ public class CombatListener implements Listener {
     public void onEntityAttack(EntityDamageByEntityEvent e){
         if(e.getDamager() instanceof Damageable ent && ent.hasMetadata("power")) {
             double power = ent.getMetadata("power").get(0).asDouble();
-            double newDamage = e.getDamage() * (power/300 + 1);
-
-            System.out.println(e.getDamage() + " " + newDamage);
+            double newDamage = e.getDamage() + e.getDamage() * (power/80 + 1);
 
             e.setDamage(newDamage);
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerTakeDamageByEntity(EntityDamageByEntityEvent e){
         if(e.getEntity() instanceof Player player){
             UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
-
-            ugPlayer.takeDamage(e.getDamage() * (1 - ugPlayer.getDamageReduction()));
+            double damage = e.getDamage() * (1 - ugPlayer.getDamageReduction());
+            ugPlayer.takeDamage(damage);
             e.setDamage(0);
         }
     }
@@ -92,9 +83,12 @@ public class CombatListener implements Listener {
     public void onPlayerTakeDamage(EntityDamageEvent e){
         if(e.getEntity() instanceof Player player){
             UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+            ugPlayer.updateActionBarStats();
 
-            ugPlayer.takeDamage(e.getDamage() * (1 - ugPlayer.getDamageReduction()));
-            e.setDamage(0);
+            if(!e.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)){
+                ugPlayer.takeDamage(e.getDamage());
+                e.setDamage(0);
+            }
         }
     }
 

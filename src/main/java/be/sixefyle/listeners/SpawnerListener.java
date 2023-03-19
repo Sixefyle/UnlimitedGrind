@@ -1,6 +1,6 @@
 package be.sixefyle.listeners;
 
-import be.sixefyle.BetterSpawner;
+import be.sixefyle.UGSpawner;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.gui.SpawnerGui;
 import be.sixefyle.utils.HologramUtils;
@@ -16,7 +16,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.SpawnerSpawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -38,7 +37,7 @@ public class SpawnerListener implements Listener {
 
         if(block.getType().equals(Material.SPAWNER) && e.getAction().isRightClick()){
             CreatureSpawner spawner = (CreatureSpawner) block.getState();
-            BetterSpawner betterSpawner = BetterSpawner.getBetterSpawner(spawner.getLocation());
+            UGSpawner betterSpawner = UGSpawner.getBetterSpawner(spawner.getLocation());
             if(player.getInventory().getItemInMainHand().getType().name().contains("_SPAWN_EGG") &&
                     (!spawner.getSpawnedType().isSpawnable() || betterSpawner.getStackAmount() == 1)) return;
 
@@ -51,7 +50,8 @@ public class SpawnerListener implements Listener {
     public void onBreakSpawner(BlockBreakEvent e){
         Block block = e.getBlock();
         if(block.getType().equals(Material.SPAWNER)){
-            BetterSpawner.getSpawners().remove(block.getLocation());
+            UGSpawner ugSpawner = UGSpawner.getSpawners().get(block.getLocation());
+            ugSpawner.pickup(e.getPlayer());
         }
     }
 
@@ -84,10 +84,10 @@ public class SpawnerListener implements Listener {
                     boolean isSilence = getPersistantContainer(itemMeta, "silence", PersistentDataType.BYTE) == 1;
                     EntityType entityType = EntityType.valueOf(getPersistantContainer(itemMeta, "entityType", PersistentDataType.STRING));
 
-                    new BetterSpawner(maxAmount, amount, maxStackUpgradeLevel, stackUpgradeLevel,
+                    new UGSpawner(maxAmount, amount, maxStackUpgradeLevel, stackUpgradeLevel,
                             power, isSilence, rareDropChance, block.getLocation(), island.get(), entityType);
                 } else {
-                    new BetterSpawner(EntityType.ZOMBIE, island.get(), block.getLocation());
+                    new UGSpawner(EntityType.PIG, island.get(), block.getLocation());
                 }
             }
         }
@@ -97,7 +97,7 @@ public class SpawnerListener implements Listener {
     public void onCreatureSpawn(SpawnerSpawnEvent e){
         e.setCancelled(true);
         CreatureSpawner spawner = e.getSpawner();
-        BetterSpawner betterSpawner = BetterSpawner.getBetterSpawner(spawner.getLocation());
+        UGSpawner betterSpawner = UGSpawner.getBetterSpawner(spawner.getLocation());
         if(betterSpawner != null){
             spawnEntity(spawner, e.getLocation(), betterSpawner.getStackAmount());
         }
@@ -105,15 +105,14 @@ public class SpawnerListener implements Listener {
 
     private void spawnEntity(CreatureSpawner spawner, Location loc, int amountToAdd){
         if(spawner == null) return;
-        BetterSpawner betterSpawner = BetterSpawner.getBetterSpawner(spawner.getLocation());
+        UGSpawner betterSpawner = UGSpawner.getBetterSpawner(spawner.getLocation());
         if(betterSpawner == null) return;
 
         double spawnerPower = betterSpawner.getPower();
         Damageable nearestCreature = getNearestCreature(spawner.getSpawnedType(), spawner.getLocation(), spawnerPower,10);
         if (nearestCreature == null) {
             Damageable ent = (Damageable) spawner.getWorld().spawnEntity(loc, spawner.getSpawnedType());
-            double newHealth = ent.getMaxHealth() +
-                    Math.pow(spawnerPower, 1.29912);
+            double newHealth = ent.getMaxHealth()+(ent.getMaxHealth()*(spawnerPower/50))*(Math.pow(spawnerPower,.78)/100+1);
 
             ent.setMaxHealth(newHealth);
             ent.setHealth(newHealth);

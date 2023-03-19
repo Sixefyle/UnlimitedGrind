@@ -5,8 +5,9 @@ import org.bukkit.attribute.Attribute;
 public enum Stats {
     ATTACK_DAMAGE(Attribute.GENERIC_ATTACK_DAMAGE, "Attack Damage", true, 1, Double.MAX_VALUE, true, false),
     ATTACK_SPEED(Attribute.GENERIC_ATTACK_SPEED,"Attack Speed", true, -3, 3, true, false),
-    ARMOR(Attribute.GENERIC_ARMOR,"Armor", true, 1, 60000, true, false),
+    //ARMOR(Attribute.GENERIC_ARMOR,"Armor", true, 1, 60000, true, false),
     HEALTH("bonusHealth","Health", false, 1, Double.MAX_VALUE, true, false),
+    ARMOR("armor","Armor", false, 1, 60000, true, false),
     VITALITY("vitality","Vitality", false, 1, Double.MAX_VALUE, true, false),
     STRENGTH("strength","Strength", false, 1, Double.MAX_VALUE, true, false),
     CRITICAL_DAMAGE("critDamage","Critical Damage", false, .2, .5, true, true),

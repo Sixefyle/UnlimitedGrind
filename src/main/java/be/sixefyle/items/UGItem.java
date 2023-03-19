@@ -88,7 +88,7 @@ public class UGItem {
         DropTable dropTableItem = DropTable.valueOf(item.getType().name());
         ItemCategory itemCategory = dropTableItem.getItemCategory();
         if(itemCategory.equals(ItemCategory.MELEE)) {
-            double weapDamage = NumberUtils.getRandomNumber(10, 20) + NumberUtils.getRandomNumber (power/500, power/450);//TODO: magic number
+            double weapDamage = NumberUtils.getRandomNumber(10, 20) + NumberUtils.getRandomNumber (power/88, power/84);//TODO: magic number
             addStats(Stats.ATTACK_DAMAGE, weapDamage, itemMeta, dropTableItem.getSlot());
 
             double weapStrength = NumberUtils.getRandomNumber(Math.pow(getPower(), .75), Math.pow(getPower(), .73));
@@ -139,7 +139,6 @@ public class UGItem {
             }
 
             List<Stats> itemStatsList = new ArrayList<>() {{
-                add(Stats.ARMOR_TOUGHNESS);
                 add(Stats.BONUS_ATTACK_DAMAGE);
                 add(Stats.BONUS_ATTACK_SPEED);
                 add(Stats.KNOCKBACK_RESISTANCE);
@@ -181,7 +180,7 @@ public class UGItem {
         setupPowerLore(loreComp);
 
         loreComp.add(Component.text(""));
-        setupStatsLore(loreComp, itemMeta);
+        setupStatsLore(loreComp);
         setupEnchantsLore(loreComp);
         setupPassifLore(loreComp);
 
@@ -203,10 +202,7 @@ public class UGItem {
         loreComp.add(Component.text(PlaceholderUtils.replace(this, powerLine)));
     }
 
-    private void setupStatsLore(List<Component> loreComp, ItemMeta itemMeta){
-        Multimap<Attribute, AttributeModifier> attributes = itemMeta.getAttributeModifiers();
-        if(attributes == null || attributes.isEmpty()) return;
-
+    private void setupStatsLore(List<Component> loreComp){
         HashMap<Stats, Double> primaryStats = new HashMap<>();
         HashMap<Stats, Double> secondaryStats = new HashMap<>();
         statsMap.forEach((itemStat, value) -> {
@@ -334,7 +330,7 @@ public class UGItem {
         }
     }
 
-    public ItemStack getItem() {
+    public ItemStack asItemStack() {
         return item;
     }
 

@@ -1,53 +1,40 @@
 package be.sixefyle.gui;
 
-import be.sixefyle.BetterSpawner;
-import be.sixefyle.UGPlayer;
+import be.sixefyle.UGSpawner;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.utils.PlaceholderUtils;
-import be.sixefyle.utils.StringUtils;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
-import com.iridium.iridiumcore.IridiumCore;
 import com.iridium.iridiumcore.dependencies.xseries.XMaterial;
 import com.iridium.iridiumcore.utils.InventoryUtils;
 import com.iridium.iridiumskyblock.IridiumSkyblock;
 import com.iridium.iridiumskyblock.configs.inventories.NoItemGUI;
 import com.iridium.iridiumskyblock.gui.GUI;
-import josegamerpt.realscoreboard.RealScoreboard;
-import josegamerpt.realscoreboard.api.RealScoreboardAPI;
 import net.kyori.adventure.text.Component;
-import org.apache.commons.lang.text.StrSubstitutor;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.CreatureSpawner;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
 
 
-public class SpawnerGui extends GUI {
+public class SpawnerGui extends UGGui {
 
     private CreatureSpawner spawner;
-    private BetterSpawner betterSpawner;
+    private UGSpawner betterSpawner;
 
     public SpawnerGui(CreatureSpawner spawner) {
-        super(new NoItemGUI(27, "Spawner Upgrade", null));
+        super(27, "Spawner");
 
         this.spawner = spawner;
-        this.betterSpawner = BetterSpawner.getBetterSpawner(spawner.getLocation());
-    }
-
-    private<T, Z> void createNewPersistentDataContainer(ItemMeta itemMeta, String id, PersistentDataType<T, Z> type, Z value){
-        itemMeta.getPersistentDataContainer().set(new NamespacedKey(UnlimitedGrind.getInstance(), id), type, value);
+        this.betterSpawner = UGSpawner.getBetterSpawner(spawner.getLocation());
     }
 
     @Override
@@ -126,37 +113,7 @@ public class SpawnerGui extends GUI {
                     errorMessage = config.getString("lang.spawner.error.maxRareDropChance");
                 }
             } else if(itemType.equals(icons[6])) { // pickup
-                //TODO: move this code to better spawner class
-                ItemStack pickupSpawner = new ItemStack(Material.SPAWNER, 1);
-                ItemMeta pickupSpawnerMeta = pickupSpawner.getItemMeta();
-
-                pickupSpawnerMeta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
-
-                String name = PlaceholderUtils.replace(betterSpawner, config.getString("lang.spawner.gui.pickedUp.name"));
-                pickupSpawnerMeta.displayName(Component.text(name));
-
-                List<Component> lore = new ArrayList<>();
-                String result;
-                for (String line : config.getStringList("lang.spawner.gui.pickedUp.lore")) {
-                    result = PlaceholderUtils.replace(betterSpawner, line);
-                    lore.add(Component.text(result));
-                }
-                pickupSpawnerMeta.lore(lore);
-
-                createNewPersistentDataContainer(pickupSpawnerMeta, "power", PersistentDataType.DOUBLE, betterSpawner.getPower());
-                createNewPersistentDataContainer(pickupSpawnerMeta, "amount", PersistentDataType.INTEGER, betterSpawner.getStackAmount());
-                createNewPersistentDataContainer(pickupSpawnerMeta, "maxAmount", PersistentDataType.INTEGER, betterSpawner.getMaxStackAmount());
-                createNewPersistentDataContainer(pickupSpawnerMeta, "stackUpgradeLevel", PersistentDataType.INTEGER, betterSpawner.getStackUpgradeLevel());
-                createNewPersistentDataContainer(pickupSpawnerMeta, "maxStackUpgradeLevel", PersistentDataType.INTEGER, betterSpawner.getMaxStackUpgradeLevel());
-                createNewPersistentDataContainer(pickupSpawnerMeta, "rareDropChance", PersistentDataType.DOUBLE, betterSpawner.getRareDropChance());
-                createNewPersistentDataContainer(pickupSpawnerMeta, "silence", PersistentDataType.BYTE,  (byte) (betterSpawner.isSilence() ?  1 : 0));
-                createNewPersistentDataContainer(pickupSpawnerMeta, "entityType", PersistentDataType.STRING,  betterSpawner.getSpawner().getSpawnedType().name());
-
-                pickupSpawner.setItemMeta(pickupSpawnerMeta);
-
-                player.getInventory().addItem(pickupSpawner);
-                betterSpawner.remove();
-                player.closeInventory();
+                betterSpawner.pickup(player);
             }
 
             if(errorMessage != null && !errorMessage.isEmpty()){

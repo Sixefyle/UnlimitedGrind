@@ -1,5 +1,6 @@
 package be.sixefyle.items;
 
+import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.items.passifs.interfaces.OnEquip;
 import be.sixefyle.items.passifs.interfaces.OnMeleeHit;
@@ -7,9 +8,11 @@ import be.sixefyle.items.passifs.Passif;
 import be.sixefyle.items.passifs.interfaces.OnReceiveDamage;
 import be.sixefyle.utils.NumberUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -40,9 +43,27 @@ public class ItemManager implements Listener {
         return false;
     }
 
+    public static UGItem generateItem(double power, DropTable dropTable, Rarity rarity){
+        List<Passif> itemPassifList = new ArrayList<>();
+        String itemPrefix = null;
+        if(rarity.equals(Rarity.LEGENDARY) || rarity.equals(Rarity.MYTHIC)){
+            Passif passif = Passif.values()[(int) (Math.random() * Passif.values().length)];
+            ItemCategory currentPassifCategory = passif.getItemCategory();
+
+            while(!canAddPassif(passif, rarity, currentPassifCategory, dropTable.getItemCategory())) {
+                passif = Passif.values()[(int) (Math.random() * Passif.values().length)];
+                currentPassifCategory = passif.getItemCategory();
+            }
+            itemPrefix = passif.getItemPassif().getItemPrefixName();
+            itemPassifList.add(passif);
+        }
+
+        return new UGItem(dropTable.getMaterial(), rarity, null, itemPrefix, null, null, power, itemPassifList);
+    }
+
     public static UGItem generateRandomItem(ItemCategory itemCategory, double power){
-        double minPower = power - (power % 500);
-        double maxPower = minPower + 1000;
+        double minPower = power - (power % 50);
+        double maxPower = minPower + 100;
         double itemPower = NumberUtils.getRandomNumber(minPower, maxPower);
 
         DropTable itemType = DropTable.values()[(int) (Math.random() * DropTable.values().length)];
@@ -51,23 +72,8 @@ public class ItemManager implements Listener {
             itemType = DropTable.values()[(int) (Math.random() * DropTable.values().length)];
             currentItemCategory = itemType.getItemCategory();
         }
-
         Rarity rarity = Rarity.getRandomRarity();
-        List<Passif> itemPassifList = new ArrayList<>();
-        String itemPrefix = null;
-        if(rarity.equals(Rarity.LEGENDARY) || rarity.equals(Rarity.MYTHIC)){
-            Passif passif = Passif.values()[(int) (Math.random() * Passif.values().length)];
-            ItemCategory currentPassifCategory = passif.getItemCategory();
-
-            while(!canAddPassif(passif, rarity, currentPassifCategory, currentItemCategory)) {
-                passif = Passif.values()[(int) (Math.random() * Passif.values().length)];
-                currentPassifCategory = passif.getItemCategory();
-            }
-            itemPrefix = passif.getItemPassif().getItemPrefixName();
-            itemPassifList.add(passif);
-        }
-
-        return new UGItem(itemType.getMaterial(), rarity, null, itemPrefix, null, null, itemPower, itemPassifList);
+        return generateItem(itemPower, itemType, rarity);
     }
 
     public static UGItem generateRandomItem(double power){
@@ -107,13 +113,8 @@ public class ItemManager implements Listener {
     public void onReceiveDamage(EntityDamageEvent e){
         Entity entity = e.getEntity();
         if(entity instanceof Player player){
-            ItemStack[] item = new ItemStack[5];
-            item[0] = player.getInventory().getHelmet();
-            item[1] = player.getInventory().getChestplate();
-            item[2] = player.getInventory().getLeggings();
-            item[3] = player.getInventory().getBoots();
-            item[4] = player.getInventory().getItemInOffHand();
-            for (ItemStack itemStack : item) {
+            UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+            for (ItemStack itemStack : ugPlayer.getArmorAndOffHand()) {
                 if(itemStack == null) continue;
 
                 int[] passifIDs = getItemPassifArray(itemStack);
@@ -193,6 +194,15 @@ public class ItemManager implements Listener {
 
     @EventHandler
     public void onCraftItem(CraftItemEvent e){
-        ItemStack craftedItem = e.getCurrentItem();
+        try{
+            if(e.getCurrentItem() == null) return;
+            Material craftedItemMaterial = e.getCurrentItem().getType();
+
+            Player player = (Player) e.getViewers().get(0);
+            UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+            UGItem ugItem = ItemManager.generateItem(ugPlayer.getMaxPower(), DropTable.valueOf(craftedItemMaterial.name()), Rarity.getRandomRarity());
+
+            e.setCurrentItem(ugItem.asItemStack());
+        }catch (IllegalArgumentException ignore){}
     }
 }

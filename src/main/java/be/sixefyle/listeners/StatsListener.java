@@ -34,7 +34,7 @@ public class StatsListener implements Listener {
     public void doStrengthDamage(EntityDamageByEntityEvent e){
         if(e.getDamager() instanceof Player player){
             UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
-            e.setDamage(e.getFinalDamage() * ((ugPlayer.getStatValue(Stats.STRENGTH) / 10000) + 1));
+            e.setDamage(e.getFinalDamage() * ((ugPlayer.getStatValue(Stats.STRENGTH) / 200) + 1));
         }
     }
 

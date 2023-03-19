@@ -84,7 +84,7 @@ public class BasicListeners implements Listener {
                 }
             }
 
-            double newHealth = damageable.getMaxHealth()+(damageable.getMaxHealth()*(maxPower/20000))*(Math.pow(maxPower,.78)/100+1); //TODO: magic number
+            double newHealth = damageable.getMaxHealth()+(damageable.getMaxHealth()*(maxPower/50))*(Math.pow(maxPower,.78)/100+1); //TODO: magic number
 
             damageable.setMaxHealth(newHealth);
             damageable.setHealth(newHealth);
@@ -148,7 +148,11 @@ public class BasicListeners implements Listener {
     public void onPlayerRegenHealth(EntityRegainHealthEvent e){
         if(e.getEntity() instanceof Player player){
             UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
-            ugPlayer.regenHealth(e.getAmount());
+            if(e.getRegainReason().equals(EntityRegainHealthEvent.RegainReason.SATIATED)){
+                ugPlayer.regenHealth(.01 * ugPlayer.getMaxHealth());
+            } else {
+                ugPlayer.regenHealth(e.getAmount());
+            }
 
             e.setCancelled(true);
         }
@@ -182,7 +186,7 @@ public class BasicListeners implements Listener {
         UGItem oldItem = UGItem.getFromItemStack(oldItemStack);
 
         if(ugPlayer.canEquipItem(newItem)){
-            ugPlayer.updateWearedPower();
+            ugPlayer.updateWearedPower(newItem, oldItem);
             ugPlayer.updateStatsFromItem(newItem, oldItem);
         } else {
             e.setCancelled(true);
@@ -209,8 +213,16 @@ public class BasicListeners implements Listener {
         if(ugPlayer.canEquipItem(ugNewItem)) {
             ugPlayer.updateStatsFromItem(ugNewItem, ugOldItem);
 
-            ugPlayer.updateWearedPower();
+            ugPlayer.updateEquippedWearedPower();
             ugPlayer.setHealthFromStat();
+
+            Player player = e.getPlayer();
+
+            Bukkit.getScheduler().runTaskLater(UnlimitedGrind.getInstance(), () -> {
+                for (AttributeModifier modifier : player.getAttribute(Attribute.GENERIC_ARMOR).getModifiers()) {
+                    player.getAttribute(Attribute.GENERIC_ARMOR).removeModifier(modifier);
+                }
+            },1);
         }
     }
 

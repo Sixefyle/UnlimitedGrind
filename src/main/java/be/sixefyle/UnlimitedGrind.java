@@ -19,6 +19,7 @@ import com.iridium.iridiumcore.dependencies.xseries.XMaterial;
 import com.iridium.iridiumskyblock.IridiumSkyblock;
 import com.iridium.iridiumskyblock.Upgrade;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
+import com.iridium.iridiumskyblock.configs.inventories.InventoryConfig;
 import com.iridium.iridiumskyblock.upgrades.UpgradeData;
 import com.jeff_media.armorequipevent.ArmorEquipEvent;
 import fr.skytasul.glowingentities.GlowingEntities;
@@ -66,10 +67,14 @@ public class UnlimitedGrind extends JavaPlugin {
         getCommand("ugreload").setExecutor(new ReloadCommand());
         getCommand("power").setExecutor(new PowerCommand());
         getCommand("randomgive").setExecutor(new RandomItemCommand());
+        getCommand("randomgive").setTabCompleter(new RandomItemCommand());
         getCommand("arena").setExecutor(new ArenaCommand());
+
         getCommand("group").setExecutor(new GroupCommand());
+        getCommand("group").setTabCompleter(new GroupCommand());
 
         initNewUpgrade();
+        initNewMenuIcons();
 
         //Hearth damage indicator disabler
         protocolManager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Server.WORLD_PARTICLES) {
@@ -211,6 +216,43 @@ public class UnlimitedGrind extends JavaPlugin {
         config.addDefault("lang.spawner.error.maxStackUpgradeReached", "&cThe maximum spawner stack as been reached!");
         config.addDefault("lang.spawner.error.maxRareDropChance", "&cThe maximum rare drop chance as been reached!");
 
+        config.set("lang.arena.gui.powerUpgrade.material", Material.REDSTONE.name());
+        config.set("lang.arena.gui.powerUpgrade.pos", 2);
+        config.set("lang.arena.gui.powerUpgrade.name", "&cPower Upgrade");
+        config.set("lang.arena.gui.powerUpgrade.lore", new ArrayList<>() {{
+            add("");
+            add("&7Current Power: &c%power%");
+            add("");
+            add("&7Creature Health: &a%creatureHealth%%");
+            add("&7Creature Damage: &c%creatureDamage%%");
+            add("");
+            add("&eLeft Click to increase Power by 50 !");
+            add("&7Right Click to increase by 500");
+            add("&cHold SHIFT to decrease");
+            add("");
+            add("&8Power increase mob health and damage.");
+        }});
+
+        config.set("lang.arena.gui.startButton.material", Material.IRON_SWORD.name());
+        config.set("lang.arena.gui.startButton.pos", 4);
+        config.set("lang.arena.gui.startButton.name", "&cStart Arena");
+        config.set("lang.arena.gui.startButton.lore", new ArrayList<>() {{
+            add("");
+            add("&7Power: &c%power%");
+            add("");
+            add("&7Creature Health: &a%creatureHealth%%");
+            add("&7Creature Damage: &c%creatureDamage%%");
+            add("");
+            add("%group%");
+        }});
+
+        config.set("lang.arena.gui.mapChange.material", Material.MAP.name());
+        config.set("lang.arena.gui.mapChange.pos", 6);
+        config.set("lang.arena.gui.mapChange.name", "&cChange Map");
+        config.set("lang.arena.gui.mapChange.lore", new ArrayList<>() {{
+            add("&cWIP.");
+        }});
+
         config.addDefault("lang.item.error.notEnoughPower", "You need more power to equip this item!");
 
         config.set("creature.health", "&a" + Symbols.HEALTH.get() + " &a%currentHealth%&7/%maxHealth%");
@@ -282,13 +324,23 @@ public class UnlimitedGrind extends JavaPlugin {
             add("Who need health if they can't hit you...");
         }});
 
-        config.set("pve.arena.rareDropChance", 0.01);
-        config.set("pve.arena.perWaveRareDropChanceIncrease", 0.0002); // 1 wave = 0.02% added to rare drop chance
+        config.set("pve.arena.rareDropChance", 0.03);
+        config.set("pve.arena.perWaveRareDropChanceIncrease", 0.002); // 1 wave = 0.2% added to rare drop chance
 
         //getLogger().severe("Down here \\/");
         //getLogger().severe(config.getConfigurationSection("lang.spawner.gui").getKeys(true) + "");
         config.options().copyDefaults(true);
         saveConfig();
+    }
+
+    public void initNewMenuIcons(){
+        InventoryConfig islandMenu = IridiumSkyblock.getInstance().getInventories().islandMenu;
+        Item missionItem = islandMenu.items.get("is missions");
+        Item borderItem = islandMenu.items.get("is border");
+        islandMenu.items.remove("is border");
+        islandMenu.items.replace("is missions", new Item(XMaterial.FLOWER_BANNER_PATTERN, 4, 1, missionItem.displayName, missionItem.lore));
+        islandMenu.items.put("arena", new Item(XMaterial.END_CRYSTAL, 22, 1, "\"&b&lArena", List.of("&7Fight creature in an arena!")));
+        islandMenu.items.put("is shop", new Item(XMaterial.GOLD_INGOT, borderItem.slot, 1, "&b&lShop", List.of("&7Buy somethings for your island!")));
     }
 
     public void initNewUpgrade(){

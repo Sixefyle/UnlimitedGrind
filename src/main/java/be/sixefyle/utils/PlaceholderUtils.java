@@ -1,16 +1,17 @@
 package be.sixefyle.utils;
 
-import be.sixefyle.BetterSpawner;
+import be.sixefyle.UGSpawner;
 import be.sixefyle.UGPlayer;
 import be.sixefyle.enums.Symbols;
+import be.sixefyle.gui.ArenaGui;
 import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.UGItem;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
-import net.kyori.adventure.text.Component;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.attribute.Attribute;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Damageable;
 
+import java.util.Iterator;
 import java.util.Locale;
 
 public class PlaceholderUtils {
@@ -20,7 +21,7 @@ public class PlaceholderUtils {
         return s;
     }
 
-    public static String replace(BetterSpawner betterSpawner, String s){
+    public static String replace(UGSpawner betterSpawner, String s){
         double power = betterSpawner.getPower();
         s = s.replaceAll("%power%", String.format(Locale.ENGLISH, "%,.0f", power));
         s = s.replaceAll("%fPower%", NumberUtils.format(power));
@@ -29,9 +30,9 @@ public class PlaceholderUtils {
 
         s = s.replaceAll("%silence%", betterSpawner.isSilence() ? "&aEnable" : "&cDisable");
 
-        s = s.replaceAll("%powerUpgradeCost%", NumberUtils.format(BetterSpawner.getUgradePrice(power, 10)));
-        s = s.replaceAll("%powerUpgradeCost100%", NumberUtils.format(BetterSpawner.getUgradePrice(power, 100)));
-        s = s.replaceAll("%powerUpgradeCost1000%", NumberUtils.format(BetterSpawner.getUgradePrice(power, 1000)));
+        s = s.replaceAll("%powerUpgradeCost%", NumberUtils.format(UGSpawner.getUgradePrice(power, 10)));
+        s = s.replaceAll("%powerUpgradeCost100%", NumberUtils.format(UGSpawner.getUgradePrice(power, 100)));
+        s = s.replaceAll("%powerUpgradeCost1000%", NumberUtils.format(UGSpawner.getUgradePrice(power, 1000)));
 
         s = s.replaceAll("%minTime%", String.valueOf(betterSpawner.getSpawner().getMinSpawnDelay()));
         s = s.replaceAll("%maxTime%", String.valueOf(betterSpawner.getSpawner().getMaxSpawnDelay()));
@@ -72,7 +73,7 @@ public class PlaceholderUtils {
         if(name != null) {
             s = s.replaceAll("%name%", name);
         } else {
-            s = s.replaceAll("%name%", StringUtils.capitalize(ugItem.getItem().getType().toString().toLowerCase()));
+            s = s.replaceAll("%name%", StringUtils.capitalize(ugItem.asItemStack().getType().toString().toLowerCase()));
         }
 
         return replace(s);
@@ -91,6 +92,34 @@ public class PlaceholderUtils {
     public static String replace(ItemPassif passif, boolean isItemMythic, String s){
         s = s.replaceAll("%strength%", String.format(Locale.ENGLISH, "%,.0f",
                 passif.getReadableStrength() + (isItemMythic ? passif.getReadableMythicBonus() : 0)));
+
+        return replace(s);
+    }
+
+    public static String replace(ArenaGui arenaGui, String s){
+        double power = arenaGui.getCurrentPower();
+        UGPlayer ugPlayer = arenaGui.getUgPlayer();
+
+
+        s = s.replaceAll("%power%", String.format(Locale.ENGLISH, "%,.0f", power));
+        s = s.replaceAll("%creatureHealth%", String.format(Locale.ENGLISH, "%,.0f", 100+((power/50)*(Math.pow(power,.78)/100+1)) * 100)); // TODO: create class to store this to one place
+        s = s.replaceAll("%creatureDamage%", String.format(Locale.ENGLISH, "%,.0f", 100+(power/80) * 100));
+
+        if(ugPlayer.hasGroup()){
+            StringBuilder stringBuilder = new StringBuilder("&7Group: ");
+
+            Iterator<UGPlayer> iterator = ugPlayer.getGroup().getMembers().iterator();
+
+            while (iterator.hasNext()){
+                stringBuilder.append(ChatColor.GREEN).append(iterator.next().getPlayer().getName());
+                if(iterator.hasNext()){
+                    stringBuilder.append(", ");
+                }
+            }
+            s = s.replaceAll("%group%", stringBuilder.toString());
+        } else {
+            s = s.replaceAll("%group%", "");
+        }
 
         return replace(s);
     }
