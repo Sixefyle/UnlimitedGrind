@@ -27,6 +27,7 @@ import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -56,13 +57,16 @@ public class UnlimitedGrind extends JavaPlugin {
         }
 
         ArmorEquipEvent.registerListener(this);
-        Bukkit.getPluginManager().registerEvents(new BasicListeners(), this);
-        Bukkit.getPluginManager().registerEvents(new CombatListener(), this);
-        Bukkit.getPluginManager().registerEvents(new BlockGeneratorListener(), this);
-        Bukkit.getPluginManager().registerEvents(new SpawnerListener(), this);
-        Bukkit.getPluginManager().registerEvents(new ItemManager(), this);
-        Bukkit.getPluginManager().registerEvents(new PveArenaListener(), this);
-        Bukkit.getPluginManager().registerEvents(new StatsListener(), this);
+        PluginManager pluginManager = Bukkit.getPluginManager();
+        pluginManager.registerEvents(new BasicListeners(), this);
+        pluginManager.registerEvents(new CombatListener(), this);
+        pluginManager.registerEvents(new BlockGeneratorListener(), this);
+        pluginManager.registerEvents(new SpawnerListener(), this);
+        pluginManager.registerEvents(new ItemManager(), this);
+        pluginManager.registerEvents(new PveArenaListener(), this);
+        pluginManager.registerEvents(new StatsListener(), this);
+        pluginManager.registerEvents(new EffectListener(), this);
+        pluginManager.registerEvents(new IslandListener(), this);
 
         getCommand("ugreload").setExecutor(new ReloadCommand());
         getCommand("power").setExecutor(new PowerCommand());
@@ -262,7 +266,7 @@ public class UnlimitedGrind extends JavaPlugin {
         config.set("spawner.title.typeAndPower", "%mobType% - &c" + Symbols.POWER.get() + " %fPower%");
         config.set("spawner.title.amount", "&e%amount%&7/%maxAmount%");
 
-        config.set("lang.item.name", "%rarity% %prefix%%name% %suffix%");
+        config.set("lang.item.name", "%prefix%%name% %suffix%");
         config.set("lang.item.power", "&7Item Power: &c" + Symbols.POWER.get() + "%power%");
         config.set("lang.item.condition", "%condition%");
 
@@ -286,7 +290,7 @@ public class UnlimitedGrind extends JavaPlugin {
             add("&7Reduce all incoming damage by &e%strength%%");
         }});
 
-        config.set("itemPassif.thunderStorm.strength", 12.5);
+        config.set("itemPassif.thunderStorm.strength", 3.5);
         config.set("itemPassif.thunderStorm.name", "&bThunder Storm");
         config.set("itemPassif.thunderStorm.description", new ArrayList<>() {{
             add("&7Small chance to let rain a thunder storm to all");
@@ -327,8 +331,6 @@ public class UnlimitedGrind extends JavaPlugin {
         config.set("pve.arena.rareDropChance", 0.03);
         config.set("pve.arena.perWaveRareDropChanceIncrease", 0.002); // 1 wave = 0.2% added to rare drop chance
 
-        //getLogger().severe("Down here \\/");
-        //getLogger().severe(config.getConfigurationSection("lang.spawner.gui").getKeys(true) + "");
         config.options().copyDefaults(true);
         saveConfig();
     }

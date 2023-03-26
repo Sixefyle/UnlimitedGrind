@@ -30,9 +30,10 @@ public class LifeConversion extends ItemPassif implements OnEquip {
 
     @Override
     public void onEquip(Player player, ItemStack item) {
-        if(!players.containsKey(player)){
-            players.put(player, new ArrayList<>());
+        if(players.containsKey(player)){
+            removePassifAttributeModifier(player);
         }
+        players.put(player, new ArrayList<>());
 
         UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
         ugPlayer.setMaxHealth(1);

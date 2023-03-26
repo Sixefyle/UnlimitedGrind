@@ -2,7 +2,7 @@ package be.sixefyle.arena.pve;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
-import be.sixefyle.arena.Arena;
+import be.sixefyle.arena.ArenaMap;
 import be.sixefyle.arena.WorldManager;
 import be.sixefyle.utils.NumberUtils;
 import com.iridium.iridiumskyblock.IridiumSkyblock;
@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class ArenaManager {
-    private final Arena arena;
+    private final ArenaMap arena;
     private Wave wave;
     private int currentWave;
     private int minCreature;
@@ -39,13 +39,13 @@ public class ArenaManager {
 
     private static HashMap<World, ArenaManager> arenaManagers = new HashMap<>();
 
-    public ArenaManager(Arena arena, World world, List<UGPlayer> players, int minCreature, int maxCreature) {
+    public ArenaManager(ArenaMap arena, World world, List<UGPlayer> players, int minCreature, int maxCreature) {
         this(arena, world, players);
         this.minCreature = minCreature;
         this.maxCreature = maxCreature;
     }
 
-    public ArenaManager(Arena arena, World world, List<UGPlayer> players) {
+    public ArenaManager(ArenaMap arena, World world, List<UGPlayer> players) {
         currentWave = 1;
         bossWave = 5;
         minCreature = 5;
@@ -132,7 +132,7 @@ public class ArenaManager {
         this.arenaPower += powerToAddEachWave;
     }
 
-    public Arena getArena() {
+    public ArenaMap getArena() {
         return arena;
     }
 

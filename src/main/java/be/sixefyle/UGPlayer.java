@@ -1,6 +1,6 @@
 package be.sixefyle;
 
-import be.sixefyle.arena.Arena;
+import be.sixefyle.arena.ArenaMap;
 import be.sixefyle.arena.BaseArena;
 import be.sixefyle.arena.pve.PveArena;
 import be.sixefyle.enums.ComponentColor;
@@ -8,8 +8,9 @@ import be.sixefyle.enums.Stats;
 import be.sixefyle.enums.Symbols;
 import be.sixefyle.exception.PlayerNotExist;
 import be.sixefyle.group.Group;
-import be.sixefyle.items.UGItem;
+import be.sixefyle.items.*;
 import be.sixefyle.utils.NumberUtils;
+import com.iridium.iridiumskyblock.IridiumSkyblock;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import com.iridium.iridiumskyblock.database.Island;
 import josegamerpt.realscoreboard.api.RealScoreboardAPI;
@@ -22,13 +23,14 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
 public class UGPlayer {
-    public static HashMap<UUID, UGPlayer> playerMap = new HashMap<>();
+    public final static HashMap<UUID, UGPlayer> playerMap = new HashMap<>();
 
     public static UGPlayer GetUGPlayer(Player player){
         return playerMap.get(player.getUniqueId());
@@ -41,6 +43,9 @@ public class UGPlayer {
     private void remove(){
         actionBarTask.cancel();
         scoreboardTask.cancel();
+        activesPotionsMap.forEach((potionEffectType, bukkitTask) -> {
+            bukkitTask.cancel();
+        });
         leavePveArena();
         leaveGroup();
     }
@@ -58,12 +63,12 @@ public class UGPlayer {
     private double wearedPower;
     private double maxPower;
     private final double baseHealth = 20;
-    private double maxHealth;
     private double currentHealth;
     private boolean isHealthLocked;
     private boolean isConnecting;
+    private final HashMap<PotionEffectType, BukkitTask> activesPotionsMap = new HashMap<>();
 
-    private HashMap<Stats, Double> statsMap = new HashMap<>();
+    private final HashMap<Stats, Double> statsMap = new HashMap<>();
 
     public UGPlayer(Player player) {
         if(playerMap.containsKey(player.getUniqueId())) return;
@@ -86,7 +91,7 @@ public class UGPlayer {
             statsMap.put(Stats.CRITICAL_CHANCE, 0.05);
             statsMap.put(Stats.CRITICAL_DAMAGE, 1.4);
             statsMap.put(Stats.LIFE_STEAL, 0.0);
-            statsMap.put(Stats.HEALTH, 0.0);
+            statsMap.put(Stats.HEALTH, baseHealth);
             statsMap.put(Stats.ARMOR, 0.0);
             statsMap.put(Stats.STRENGTH, 0.0);
             statsMap.put(Stats.VITALITY, 0.0);
@@ -106,45 +111,60 @@ public class UGPlayer {
     }
 
     public void initScoreboard(){
-        Island island = ugIsland.getIsland().get();
+        Island island = null;
+        if(ugIsland != null && ugIsland.getIsland().isPresent()){
+            island = ugIsland.getIsland().get();
+        }
+
         scoreboard = RealScoreboardAPI.getInstance().getScoreboardManager().getScoreboard(player);
         scoreboard.getLines().clear();
 
+        Island finalIsland = island;
         List<String> lines = new ArrayList<>() {{
-            add("         #{f79f07}&l⭐#{f0aa32} Rank " + island.getRank() + " #{f79f07}&l⭐");
-            add("");
+            if(finalIsland != null){
+                add("         #{f79f07}&l⭐#{f0aa32} Rank " + finalIsland.getRank() + " #{f79f07}&l⭐");
+                add("");
+            }
             add("#{e23f22}" + Symbols.PLAYER.get() + "#{e25822} Player Informations:" );
             add("  #{e23f22}▸#{E6EED6} Items Power &c" + NumberUtils.format(wearedPower) + Symbols.POWER.get());
             add("  #{e23f22}▸#{E6EED6} Max Power &c" + NumberUtils.format(maxPower) + Symbols.POWER.get());
             add("  #{e23f22}▸#{E6EED6} Money &e" + NumberUtils.format(UnlimitedGrind.getEconomy().getBalance(player)) + Symbols.COIN.get());
             add("");
-            add("#{48bff0}" + Symbols.ISLAND.get() + "#{87CEEB} Island Informations:");
-            add("  #{48bff0}▸#{E4F0D0} Value - " + NumberUtils.format(island.getValue()));
-            add("  #{48bff0}▸#{E4F0D0} Level - " + NumberUtils.format(island.getLevel()));
-            add("  #{48bff0}▸#{E4F0D0} Bank");
-            add("    #{48bff0}▹#{E4F0D0} Money - " + island.getMoney());
-            add("    #{48bff0}▹#{E4F0D0} Crystals - " + island.getCrystals());
+            if(finalIsland != null){
+                add("#{48bff0}" + Symbols.ISLAND.get() + "#{87CEEB} Island Informations:");
+                add("  #{48bff0}▸#{E4F0D0} Value - " + NumberUtils.format(finalIsland.getValue()));
+                add("  #{48bff0}▸#{E4F0D0} Level - " + NumberUtils.format(finalIsland.getLevel()));
+                add("  #{48bff0}▸#{E4F0D0} Bank");
+                add("    #{48bff0}▹#{E4F0D0} Money - " + finalIsland.getMoney());
+                add("    #{48bff0}▹#{E4F0D0} Crystals - " + finalIsland.getCrystals());
+            } else {
+                add(" #{48bff0}▸#{E4F0D0} Do #{48bff0}/is create#{E4F0D0} to start your journey! #{48bff0}◂");
+            }
         }};
 
         scoreboard.getLines().addAll(lines);
     }
 
     public void updateScoreboardLine(){
+        IridiumSkyblock.getInstance().registerListeners();
         scoreboardTask = Bukkit.getScheduler().runTaskTimer(UnlimitedGrind.getInstance(), () -> {
-            Island island = ugIsland.getIsland().get();
-            scoreboard.getLines().set(0, "         #{f79f07}&l⭐#{f0aa32} Rank " + ugIsland.getIsland().get().getRank() + " #{f79f07}&l⭐");
             updateScoreboardPower();
-            scoreboard.getLines().set(5, "  #{e23f22}▸#{E6EED6} Money &e" + NumberUtils.format(UnlimitedGrind.getEconomy().getBalance(player)) + Symbols.COIN.get());
-            scoreboard.getLines().set(8, "  #{48bff0}▸#{E4F0D0} Value - " + NumberUtils.format(island.getValue()));
-            scoreboard.getLines().set(9, "  #{48bff0}▸#{E4F0D0} Level - " + NumberUtils.format(island.getLevel()));
-            scoreboard.getLines().set(11, "    #{48bff0}▹#{E4F0D0} Money - " + island.getMoney() + Symbols.COIN.get());
-            scoreboard.getLines().set(12, "    #{48bff0}▹#{E4F0D0} Crystals - " + island.getCrystals() + Symbols.CRYSTALS.get());
+            if(ugIsland != null && ugIsland.getIsland().isPresent()){
+                Island island = ugIsland.getIsland().get();
+                scoreboard.getLines().set(0, "         #{f79f07}&l⭐#{f0aa32} Rank " + island.getRank() + " #{f79f07}&l⭐");
+                scoreboard.getLines().set(8, "  #{48bff0}▸#{E4F0D0} Value - " + NumberUtils.format(island.getValue()));
+                scoreboard.getLines().set(9, "  #{48bff0}▸#{E4F0D0} Level - " + NumberUtils.format(island.getLevel()));
+                scoreboard.getLines().set(11, "    #{48bff0}▹#{E4F0D0} Money - " + island.getMoney() + Symbols.COIN.get());
+                scoreboard.getLines().set(12, "    #{48bff0}▹#{E4F0D0} Crystals - " + island.getCrystals() + Symbols.CRYSTALS.get());
+            }
+            scoreboard.getLines().set(ugIsland == null ? 3 : 5, "  #{e23f22}▸#{E6EED6} Money &e" + NumberUtils.format(UnlimitedGrind.getEconomy().getBalance(player)) + Symbols.COIN.get());
         }, 100, 100);
     }
 
     public void updateScoreboardPower(){
-        scoreboard.getLines().set(3, "  #{e23f22}▸#{E6EED6} Items Power &c" + NumberUtils.format(wearedPower) + Symbols.POWER.get());
-        scoreboard.getLines().set(4, "  #{e23f22}▸#{E6EED6} Max Power &c" + NumberUtils.format(maxPower) + Symbols.POWER.get());
+        int index = ugIsland == null ? 1 : 3;
+        scoreboard.getLines().set(index++, "  #{e23f22}▸#{E6EED6} Items Power &c" + NumberUtils.format(wearedPower) + Symbols.POWER.get());
+        scoreboard.getLines().set(index, "  #{e23f22}▸#{E6EED6} Max Power &c" + NumberUtils.format(maxPower) + Symbols.POWER.get());
     }
 
     public void updateActionBarStats(){
@@ -172,13 +192,13 @@ public class UGPlayer {
     public TextColor getHealthColor(){
         double healthPercentage = getHealthPercentage();
         return TextColor.color(
-                (int) (healthPercentage * 67) + (int) ((1-healthPercentage) * 229),
-                (int) (healthPercentage * 255) + (int) ((1-healthPercentage) * 90),
-                (int) (healthPercentage * 93) + (int) ((1-healthPercentage) * 30)
+                (int) (healthPercentage * 67) + (int) ((1-healthPercentage) * 243),
+                (int) (healthPercentage * 255) + (int) ((1-healthPercentage) * 23),
+                (int) (healthPercentage * 93) + (int) ((1-healthPercentage) * 18)
         );
     }
 
-    public void addPower(int power) {
+    public void addPower(double power) {
         this.wearedPower += power;
     }
 
@@ -219,24 +239,22 @@ public class UGPlayer {
             if(ugItem == null) continue;
             tempPower += ugItem.getPower();
         }
-        wearedPower = tempPower / getEquippedItems().size();
-        if(wearedPower > maxPower){
-            maxPower = wearedPower;
-            updateAllItemsPowerConditionLore();
+        setWearedPower(tempPower / getEquippedItems().size());
+        if(getWearedPower() > getMaxPower()){
+            setMaxPower(getWearedPower());
         }
         updateScoreboardPower();
     }
 
     public void updateWearedPower(UGItem newItem, UGItem oldItem){
         if(newItem != null){
-            wearedPower += newItem.getPower() / getEquippedItems().size();
-            if(wearedPower > maxPower){
-                maxPower = wearedPower;
-                updateAllItemsPowerConditionLore();
+            addPower(newItem.getPower() / getEquippedItems().size());
+            if(getWearedPower() > getMaxPower()){
+                setMaxPower(getWearedPower());
             }
         }
         if(oldItem != null){
-            wearedPower -= oldItem.getPower() / getEquippedItems().size();
+            addPower(-(oldItem.getPower() / getEquippedItems().size()));
         }
         updateScoreboardPower();
     }
@@ -247,10 +265,11 @@ public class UGPlayer {
 
     public void setMaxPower(double maxPower) {
         this.maxPower = maxPower;
+        updateAllItemsPowerConditionLore();
     }
 
     public double getMaxWearablePower(){
-        return maxPower + 100;
+        return maxPower + ItemManager.MAX_OFFSET_POWER;
     }
 
     public double neededPower(double itemPower){
@@ -259,7 +278,16 @@ public class UGPlayer {
 
     public boolean canEquipItem(UGItem ugItem){
         if(ugItem == null) return true;
-        return getMaxWearablePower() >= ugItem.getPower();
+
+        double maxWearable = getMaxWearablePower();
+        Rarity itemRarity = ugItem.getRarity();
+
+        switch (itemRarity){
+            case LEGENDARY -> maxWearable += ItemManager.MAX_OFFSET_POWER / 2.0;
+            case MYTHIC -> maxWearable += ItemManager.MAX_OFFSET_POWER;
+        }
+
+        return maxWearable >= ugItem.getPower();
     }
 
     public void updateAllItemsPowerConditionLore(){
@@ -301,8 +329,13 @@ public class UGPlayer {
         return (playerArmor / (playerArmor + 15000));
     }
 
+    public double getDamageReductionPercentage(){
+        return 1 - getDamageReduction();
+    }
+
     public void setHealthFromStat(){
-        setMaxHealth(baseHealth + (getStatValue(Stats.VITALITY) * 3) + getStatValue(Stats.HEALTH));
+        double maxHealth = baseHealth + getStatValue(Stats.VITALITY) * 3;
+        setMaxHealth(maxHealth);
         if(currentHealth > maxHealth){
             setHealth(maxHealth);
         }
@@ -310,28 +343,32 @@ public class UGPlayer {
     }
 
     public void updatePlayerHeartBar(){
-        player.setHealth(Math.max(1, (currentHealth / maxHealth) * 20));
+        player.setHealth(Math.max(1, (currentHealth / getMaxHealth()) * 20));
     }
 
     public void setHealth(double health){
+        double maxHealth = getMaxHealth();
         currentHealth = Math.min(health, maxHealth);
         if(currentHealth <= 0){
             kill();
         }
-        updatePlayerHeartBar();
+        if(currentHealth > 0 && currentHealth <= maxHealth){
+            updatePlayerHeartBar();
+        }
     }
 
     public void setMaxHealth(double maxHealth){
         if(!isHealthLocked()){
-            this.maxHealth = Math.max(1, maxHealth);
-            if(currentHealth > maxHealth){
-                setHealth(maxHealth);
+            double clampedMaxHealth = Math.max(1, maxHealth);
+            setStatValue(Stats.HEALTH, clampedMaxHealth);
+            if(currentHealth > clampedMaxHealth){
+                setHealth(clampedMaxHealth);
             }
         }
     }
 
     public double getMaxHealth() {
-        return maxHealth;
+        return getStatValue(Stats.HEALTH);
     }
 
     public double getHealth() {
@@ -339,7 +376,7 @@ public class UGPlayer {
     }
 
     public double getHealthPercentage(){
-        return currentHealth / maxHealth;
+        return currentHealth / getMaxHealth();
     }
 
     public boolean isHealthLocked() {
@@ -357,7 +394,7 @@ public class UGPlayer {
     }
 
     public void respawn(){
-        if(ugIsland.getIsland().isPresent()) {
+        if(ugIsland != null && ugIsland.getIsland().isPresent()) {
             Island island = ugIsland.getIsland().get();
             player.teleport(island.getHome());
         } else {
@@ -365,8 +402,20 @@ public class UGPlayer {
         }
     }
 
-    public void regenHealth(double heath){
-        setHealth(currentHealth + heath);
+    public UGIsland getUgIsland() {
+        return ugIsland;
+    }
+
+    public void setUgIsland(UGIsland ugIsland) {
+        this.ugIsland = ugIsland;
+    }
+
+    public void regenHealth(double health){
+        double toRegen = health;
+        if(player.getFireTicks() > 0) {
+            toRegen *= .5;
+        }
+        setHealth(currentHealth + toRegen);
     }
 
     public void takeDamage(double damage){
@@ -440,21 +489,22 @@ public class UGPlayer {
         return statsMap;
     }
 
-    public void updateStatsFromItem(UGItem newItem, UGItem oldItem){
-        if(newItem != null) {
+    public void updateStatsFromItem(UGItem newItem, UGItem oldItem, ItemAction action){
+        if(ItemAction.shouldAffectStats(newItem, action)) {
             newItem.getStatsMap().forEach((stat, value) -> {
                 if(statsMap.containsKey(stat)){
                     addStatValue(stat, value);
                 }
             });
         }
-        if(oldItem != null){
+        if(ItemAction.shouldAffectStats(oldItem, action)){
             oldItem.getStatsMap().forEach((stat, value) -> {
                 if(statsMap.containsKey(stat)){
                     addStatValue(stat, -value);
                 }
             });
         }
+        setHealthFromStat();
     }
 
     public double getStatValue(Stats stat) {
@@ -471,7 +521,7 @@ public class UGPlayer {
         }
     }
 
-    public void joinPveArena(Arena arena, double power){
+    public void joinPveArena(ArenaMap arena, double power){
         if(hasGroup()){
             this.arena = new PveArena(getGroup(), arena);
         } else {
@@ -498,8 +548,12 @@ public class UGPlayer {
         return arena != null;
     }
 
+    public HashMap<PotionEffectType, BukkitTask> getActivesPotionsMap() {
+        return activesPotionsMap;
+    }
+
     public void sendMessageComponents(List<Component> components){
-        int spaceToDo = 2;
+        final int spaceToDo = 2;
         Component messageToSend = Component.empty();
         for (int i = 0; i < spaceToDo ; i++) {
             messageToSend = messageToSend.append(Component.newline());

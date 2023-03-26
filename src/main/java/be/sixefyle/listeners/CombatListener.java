@@ -2,7 +2,9 @@ package be.sixefyle.listeners;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
+import be.sixefyle.enums.Effects;
 import be.sixefyle.enums.Symbols;
+import be.sixefyle.items.UGItem;
 import be.sixefyle.utils.NumberUtils;
 import be.sixefyle.utils.HologramUtils;
 import org.bukkit.ChatColor;
@@ -44,6 +46,13 @@ public class CombatListener implements Listener {
                     e.setDamage(1);
                 }
             }
+            UGItem ugItem = UGItem.getFromItemStack(item);
+            if(ugItem != null){
+                UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+                if(!ugPlayer.canEquipItem(ugItem)){
+                    e.setDamage(1);
+                }
+            }
         }
         if(e.getFinalDamage() <= 0) return;
 
@@ -73,7 +82,7 @@ public class CombatListener implements Listener {
     public void onPlayerTakeDamageByEntity(EntityDamageByEntityEvent e){
         if(e.getEntity() instanceof Player player){
             UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
-            double damage = e.getDamage() * (1 - ugPlayer.getDamageReduction());
+            double damage = e.getDamage() * ugPlayer.getDamageReductionPercentage();
             ugPlayer.takeDamage(damage);
             e.setDamage(0);
         }
@@ -83,12 +92,18 @@ public class CombatListener implements Listener {
     public void onPlayerTakeDamage(EntityDamageEvent e){
         if(e.getEntity() instanceof Player player){
             UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
-            ugPlayer.updateActionBarStats();
+            EntityDamageEvent.DamageCause cause = e.getCause();
 
-            if(!e.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)){
+            if(cause.equals(EntityDamageEvent.DamageCause.FIRE_TICK) || cause.equals(EntityDamageEvent.DamageCause.FIRE)){
+                ugPlayer.takeDamage((ugPlayer.getMaxHealth() * Effects.FIRE.getStrength()) * ugPlayer.getDamageReductionPercentage());
+                e.setDamage(0);
+            }
+
+            if(!cause.equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)){
                 ugPlayer.takeDamage(e.getDamage());
                 e.setDamage(0);
             }
+            ugPlayer.updateActionBarStats();
         }
     }
 

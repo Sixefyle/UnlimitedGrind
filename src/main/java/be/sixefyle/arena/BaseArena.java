@@ -4,13 +4,13 @@ import java.util.UUID;
 
 public abstract class BaseArena {
 
-    private Arena arena;
+    private ArenaMap arena;
 
-    public BaseArena(Arena arena) {
+    public BaseArena(ArenaMap arena) {
         this.arena = arena;
     }
 
-    public Arena getArena() {
+    public ArenaMap getArena() {
         return arena;
     }
 

@@ -60,8 +60,6 @@ public class PlaceholderUtils {
 
     public static String replace(UGItem ugItem, String s){
         s = s.replaceAll("%power%", String.format(Locale.ENGLISH, "%,.0f", ugItem.getPower()));
-        s = s.replaceAll("%rarity%", ugItem.getRarity().getName());
-        s = s.replaceAll("%condition%", "");
 
         String prefix = ugItem.getPrefix();
         s = s.replaceAll("%prefix%", prefix != null ? prefix + " " : "");

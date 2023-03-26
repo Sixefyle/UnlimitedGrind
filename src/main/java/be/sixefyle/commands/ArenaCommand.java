@@ -1,8 +1,7 @@
 package be.sixefyle.commands;
 
 import be.sixefyle.UGPlayer;
-import be.sixefyle.arena.Arena;
-import be.sixefyle.arena.pve.PveArena;
+import be.sixefyle.arena.ArenaMap;
 import be.sixefyle.gui.ArenaGui;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -19,11 +18,11 @@ public class ArenaCommand implements CommandExecutor {
             player.openInventory(new ArenaGui(UGPlayer.GetUGPlayer(player)).getInventory());
         } else {
             try{
-                Arena arena;
+                ArenaMap arena;
                 try{
-                    arena = Arena.valueOf(args[1].toUpperCase());
+                    arena = ArenaMap.valueOf(args[1].toUpperCase());
                 } catch (ArrayIndexOutOfBoundsException e){
-                    arena = Arena.values()[(int) (Math.random() * Arena.values().length)];
+                    arena = ArenaMap.values()[(int) (Math.random() * ArenaMap.values().length)];
                 }
                 UGPlayer ugPlayer = UGPlayer.GetUGPlayer((Player) commandSender);
                 ugPlayer.joinPveArena(arena, Double.parseDouble(args[0]));

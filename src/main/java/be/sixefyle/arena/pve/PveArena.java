@@ -2,7 +2,7 @@ package be.sixefyle.arena.pve;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
-import be.sixefyle.arena.Arena;
+import be.sixefyle.arena.ArenaMap;
 import be.sixefyle.arena.BaseArena;
 import be.sixefyle.arena.WorldManager;
 import be.sixefyle.group.Group;
@@ -24,7 +24,7 @@ public class PveArena extends BaseArena {
     private UUID worldUUID;
     private ArenaManager arenaManager;
 
-    public PveArena(UGPlayer owner, Arena arena) {
+    public PveArena(UGPlayer owner, ArenaMap arena) {
         super(arena);
         this.creatureSpawnLocations = arena.getCreatureSpawnLocs();
         this.playerSpawnLocations = arena.getCreatureSpawnLocs();
@@ -32,7 +32,7 @@ public class PveArena extends BaseArena {
         this.worldUUID = owner.getPlayer().getUniqueId();
     }
 
-    public PveArena(Group group, Arena arena) {
+    public PveArena(Group group, ArenaMap arena) {
         super(arena);
         this.creatureSpawnLocations = arena.getCreatureSpawnLocs();
         this.playerSpawnLocations = arena.getCreatureSpawnLocs();

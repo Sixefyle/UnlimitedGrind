@@ -2,6 +2,7 @@ package be.sixefyle.commands;
 
 import be.sixefyle.items.ItemCategory;
 import be.sixefyle.items.ItemManager;
+import be.sixefyle.items.Rarity;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -24,6 +25,9 @@ public class RandomItemCommand implements @Nullable CommandExecutor, @Nullable T
                 } else if(args.length == 2){
                     player.getInventory().addItem(ItemManager.generateRandomItem(ItemCategory.valueOf(args[1]),
                             Double.parseDouble(args[0])).asItemStack());
+                } else if(args.length == 3){
+                    player.getInventory().addItem(ItemManager.generateRandomItem(ItemCategory.valueOf(args[1]),
+                            Double.parseDouble(args[0]), Rarity.valueOf(args[2])).asItemStack());
                 }
             } else return false;
         }
@@ -35,6 +39,10 @@ public class RandomItemCommand implements @Nullable CommandExecutor, @Nullable T
         List<String> completions = new ArrayList<>();
         if(args.length == 2){
             for (ItemCategory value : ItemCategory.values()) {
+                completions.add(value.name());
+            }
+        } else if(args.length == 3){
+            for (Rarity value : Rarity.values()) {
                 completions.add(value.name());
             }
         }

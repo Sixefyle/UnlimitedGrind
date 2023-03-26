@@ -10,12 +10,14 @@ public enum DropTable {
     IRON_SWORD(Material.IRON_SWORD, ItemCategory.MELEE, EquipmentSlot.HAND),
     GOLDEN_SWORD(Material.GOLDEN_SWORD, ItemCategory.MELEE, EquipmentSlot.HAND, Stats.CRITICAL_CHANCE),
     DIAMOND_SWORD(Material.DIAMOND_SWORD, ItemCategory.MELEE, EquipmentSlot.HAND, Stats.SWEEPING_DAMAGE),
+    NETHERITE_SWORD(Material.NETHERITE_SWORD, ItemCategory.MELEE, EquipmentSlot.HAND, false),
 
     WOODEN_AXE(Material.WOODEN_AXE, ItemCategory.MELEE, EquipmentSlot.HAND),
     STONE_AXE(Material.STONE_AXE, ItemCategory.MELEE, EquipmentSlot.HAND),
     IRON_AXE(Material.IRON_AXE, ItemCategory.MELEE, EquipmentSlot.HAND),
     GOLDEN_AXE(Material.GOLDEN_AXE, ItemCategory.MELEE, EquipmentSlot.HAND, Stats.CRITICAL_DAMAGE),
     DIAMOND_AXE(Material.DIAMOND_AXE, ItemCategory.MELEE, EquipmentSlot.HAND, Stats.LIFE_STEAL),
+    NETHERITE_AXE(Material.NETHERITE_AXE, ItemCategory.MELEE, EquipmentSlot.HAND, false),
 
     LEATHER_BOOTS(Material.LEATHER_BOOTS, ItemCategory.ARMOR, EquipmentSlot.FEET, Stats.RANGE_DAMAGE_REDUCTION),
     LEATHER_LEGGINGS(Material.LEATHER_LEGGINGS, ItemCategory.ARMOR, EquipmentSlot.LEGS, Stats.RANGE_DAMAGE_REDUCTION),
@@ -42,6 +44,11 @@ public enum DropTable {
     DIAMOND_CHESTPLATE(Material.DIAMOND_CHESTPLATE, ItemCategory.ARMOR, EquipmentSlot.CHEST, Stats.LIFE_STEAL),
     DIAMOND_HELMET(Material.DIAMOND_HELMET, ItemCategory.ARMOR, EquipmentSlot.HEAD, Stats.LIFE_STEAL),
 
+    NETHERITE_BOOTS(Material.NETHERITE_BOOTS, ItemCategory.ARMOR, EquipmentSlot.FEET, false),
+    NETHERITE_LEGGINGS(Material.NETHERITE_LEGGINGS, ItemCategory.ARMOR, EquipmentSlot.LEGS, false),
+    NETHERITE_CHESTPLATE(Material.NETHERITE_CHESTPLATE, ItemCategory.ARMOR, EquipmentSlot.CHEST, false),
+    NETHERITE_HELMET(Material.NETHERITE_HELMET, ItemCategory.ARMOR, EquipmentSlot.HEAD, false),
+
     BOW(Material.BOW, ItemCategory.DISTANCE, EquipmentSlot.HAND, Stats.MOVEMENT_SPEED),
     CROSSBOW(Material.CROSSBOW, ItemCategory.DISTANCE, EquipmentSlot.HAND, Stats.CRITICAL_DAMAGE),
     SHIELD(Material.SHIELD, ItemCategory.SHIELD, EquipmentSlot.OFF_HAND, Stats.KNOCKBACK_RESISTANCE),
@@ -51,11 +58,20 @@ public enum DropTable {
     final ItemCategory itemCategory;
     EquipmentSlot slot;
     Stats bonusPrimaryStat;
+    boolean canBeLoot;
+
+    DropTable(Material material, ItemCategory itemCategory, EquipmentSlot slot, boolean canBeLoot) {
+        this.material = material;
+        this.itemCategory = itemCategory;
+        this.slot = slot;
+        this.canBeLoot = canBeLoot;
+    }
 
     DropTable(Material material, ItemCategory itemCategory, EquipmentSlot slot) {
         this.material = material;
         this.itemCategory = itemCategory;
         this.slot = slot;
+        canBeLoot = true;
     }
 
     DropTable(Material material, ItemCategory itemCategory, EquipmentSlot slot, Stats bonusPrimaryStat) {
@@ -63,6 +79,7 @@ public enum DropTable {
         this.itemCategory = itemCategory;
         this.slot = slot;
         this.bonusPrimaryStat = bonusPrimaryStat;
+        canBeLoot = true;
     }
 
     public Material getMaterial() {
@@ -79,5 +96,9 @@ public enum DropTable {
 
     public Stats getBonusPrimaryStat() {
         return bonusPrimaryStat;
+    }
+
+    public boolean canBeLoot() {
+        return canBeLoot;
     }
 }

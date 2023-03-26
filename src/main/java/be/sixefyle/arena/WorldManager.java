@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import java.io.*;
 public class WorldManager {
 
-    private static boolean unzipWorldAndRename(Arena arena, String worldName){
+    private static boolean unzipWorldAndRename(ArenaMap arena, String worldName){
         String fileZip = Bukkit.getWorldContainer().getAbsolutePath().replaceFirst("\\.", "") + "arenas\\" + arena.getSchematicName() + ".zip";
         String destDir = Bukkit.getWorldContainer().getAbsolutePath().replaceFirst("\\.", "") + "\\" + worldName;
         try {
@@ -24,7 +24,7 @@ public class WorldManager {
         }
     }
 
-    public static boolean createVoidAndTeleport(Player owner, Group group, Arena arena){
+    public static boolean createVoidAndTeleport(Player owner, Group group, ArenaMap arena){
         String worldName = "arena_" + owner.getUniqueId();
         if(unzipWorldAndRename(arena, worldName)){
             WorldCreator worldCreator = new WorldCreator(worldName);
@@ -58,7 +58,7 @@ public class WorldManager {
         return false;
     }
 
-    public static boolean createVoidAndTeleport(Player owner, Arena arena){
+    public static boolean createVoidAndTeleport(Player owner, ArenaMap arena){
         return createVoidAndTeleport(owner, null, arena);
     }
 

@@ -9,9 +9,9 @@ import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.passifs.Passif;
 import be.sixefyle.utils.NumberUtils;
 import be.sixefyle.utils.PlaceholderUtils;
-import com.google.common.collect.Multimap;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -22,6 +22,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -34,13 +35,17 @@ public class UGItem {
     private String suffix;
     private final double power;
     private final Rarity rarity;
+    private Artifact artifact;
     private List<Passif> passifList = new ArrayList<>();
     private HashMap<Stats, Double> statsMap = new HashMap<>();
+    private ItemCategory itemCategory;
 
-    public UGItem(ItemStack itemStack, Rarity rarity, double power, int[] passifIDs, HashMap<Stats, Double> statsMap) {
+    public UGItem(ItemStack itemStack, Rarity rarity, Artifact artefact, ItemCategory itemCategory, double power, int[] passifIDs, HashMap<Stats, Double> statsMap) {
         this.power = power;
         this.item = itemStack;
         this.rarity = rarity;
+        this.artifact = artefact;
+        this.itemCategory = itemCategory;
 
         Passif passif;
         for (int id : passifIDs) {
@@ -51,6 +56,9 @@ public class UGItem {
         }
 
         this.statsMap = statsMap;
+    }
+    public UGItem(ItemStack itemStack, Rarity rarity, ItemCategory itemCategory, double power, int[] passifIDs, HashMap<Stats, Double> statsMap) {
+        this(itemStack, rarity, null, itemCategory, power, passifIDs, statsMap);
     }
 
     public UGItem(Material itemType, Rarity rarity, String name, String prefix, String suffix, List<String> lore, double power, List<Passif> passifList) {
@@ -68,15 +76,27 @@ public class UGItem {
         if(item == null){
             item = new ItemStack(material);
         }
+        statsMap.clear();
+
         ItemMeta itemMeta = item.getItemMeta();
+        boolean isAtLeastLegendary = rarity.equals(Rarity.LEGENDARY) || rarity.equals(Rarity.MYTHIC);
+        if(isAtLeastLegendary){
+            artifact = Artifact.getRandomArtifact();
+        }
 
         String nameLine = UnlimitedGrind.getInstance().getConfig().getString("lang.item.name");
-        itemMeta.displayName(Component.text(PlaceholderUtils.replace(this, nameLine)).color(rarity.getColor()).decoration(TextDecoration.ITALIC, false));
+        Component displayName = Component.text(
+                PlaceholderUtils.replace(this, nameLine)).color(rarity.getColor()).decoration(TextDecoration.ITALIC, false);
+        itemMeta.displayName(displayName);
 
         itemMeta.getPersistentDataContainer().set(
                 new NamespacedKey(UnlimitedGrind.getInstance(), "power"), PersistentDataType.DOUBLE, power);
         itemMeta.getPersistentDataContainer().set(
                 new NamespacedKey(UnlimitedGrind.getInstance(), "rarity"), PersistentDataType.STRING, rarity.name());
+        if(artifact != null){
+            itemMeta.getPersistentDataContainer().set(
+                    new NamespacedKey(UnlimitedGrind.getInstance(), "artifact"), PersistentDataType.STRING, artifact.name());
+        }
 
         int[] passifIds = new int[passifList.size()];
         for (int i = 0; i < passifList.size(); i++) {
@@ -86,15 +106,30 @@ public class UGItem {
                 new NamespacedKey(UnlimitedGrind.getInstance(), "passifIdArray"), PersistentDataType.INTEGER_ARRAY, passifIds);
 
         DropTable dropTableItem = DropTable.valueOf(item.getType().name());
-        ItemCategory itemCategory = dropTableItem.getItemCategory();
+        itemCategory = dropTableItem.getItemCategory();
+        boolean isNetherite = item.getType().name().contains("NETHERITE");
         if(itemCategory.equals(ItemCategory.MELEE)) {
-            double weapDamage = NumberUtils.getRandomNumber(10, 20) + NumberUtils.getRandomNumber (power/88, power/84);//TODO: magic number
+            double weapDamage;
+            double weapStrength;
+            double weapAttackSpeed;
+
+            if(!isNetherite){
+                weapDamage = NumberUtils.getRandomNumber(10, 20) + NumberUtils.getRandomNumber (power/88, power/84);//TODO: magic number
+                weapStrength = NumberUtils.getRandomNumber(Math.pow(getPower(), .75), Math.pow(getPower(), .73));
+                weapAttackSpeed = NumberUtils.getRandomNumber(Stats.ATTACK_SPEED.getMin(), Stats.ATTACK_SPEED.getMax());
+            } else {
+                weapDamage = NumberUtils.getRandomNumber(10, 20) + power/84;//TODO: magic number
+                weapStrength = Math.pow(getPower(), .75);
+                weapAttackSpeed = Stats.ATTACK_SPEED.getMax();
+            }
+
+            if(hasArtifact()){
+                weapDamage *= artifact.getAttributeBonusPercentage();
+                weapStrength *= artifact.getAttributeBonusPercentage();
+            }
+
             addStats(Stats.ATTACK_DAMAGE, weapDamage, itemMeta, dropTableItem.getSlot());
-
-            double weapStrength = NumberUtils.getRandomNumber(Math.pow(getPower(), .75), Math.pow(getPower(), .73));
             addStats(Stats.STRENGTH, weapStrength, itemMeta, dropTableItem.getSlot());
-
-            double weapAttackSpeed = NumberUtils.getRandomNumber(Stats.ATTACK_SPEED.getMin(), Stats.ATTACK_SPEED.getMax());
             addStats(Stats.ATTACK_SPEED, weapAttackSpeed, itemMeta, dropTableItem.getSlot());
 
             if(dropTableItem.getBonusPrimaryStat() != null){
@@ -119,17 +154,29 @@ public class UGItem {
             addRandomStats(itemStatsList, itemMeta, dropTableItem.getSlot());
 
         } else if(itemCategory.equals(ItemCategory.ARMOR) || itemCategory.equals(ItemCategory.SHIELD)) {
-            double armorValue = NumberUtils.getRandomNumber(Math.pow(getPower(), 0.6912), Math.pow(getPower(), 0.7012));
-            armorValue = Double.min(armorValue, Stats.ARMOR.getMax());
+            double armorValue;
+            double vitality;
+            double strength;
+
+            if(!isNetherite){
+                armorValue = Math.min(Math.pow(getPower(), 0.7012), Stats.ARMOR.getMax());
+                vitality = Math.pow(getPower(), .57);
+                strength = Math.pow(getPower(), .67);
+            } else {
+                armorValue = NumberUtils.getRandomNumber(Math.pow(getPower(), 0.6912), Math.pow(getPower(), 0.7012));
+                armorValue = Double.min(armorValue, Stats.ARMOR.getMax());
+                vitality = NumberUtils.getRandomNumber(Math.pow(getPower(), .57), Math.pow(getPower(), .55));
+                strength = NumberUtils.getRandomNumber(Math.pow(getPower(), .67), Math.pow(getPower(), .65));
+            }
+
+            if(hasArtifact()){
+                armorValue *= artifact.getAttributeBonusPercentage();
+                vitality *= artifact.getAttributeBonusPercentage();
+                strength *= artifact.getAttributeBonusPercentage();
+            }
+
             addStats(Stats.ARMOR, armorValue, itemMeta, dropTableItem.getSlot());
-
-//            double bonusHealth = NumberUtils.getRandomNumber(Math.pow(getPower(), 1.04956), Math.pow(getPower(), 1.05956));
-//            addStats(Stats.HEALTH, bonusHealth, itemMeta, dropTableItem.getSlot());
-
-            double vitality = NumberUtils.getRandomNumber(Math.pow(getPower(), .57), Math.pow(getPower(), .55));
             addStats(Stats.VITALITY, vitality, itemMeta, dropTableItem.getSlot());
-
-            double strength = NumberUtils.getRandomNumber(Math.pow(getPower(), .67), Math.pow(getPower(), .65));
             addStats(Stats.STRENGTH, strength, itemMeta, dropTableItem.getSlot());
 
             if(dropTableItem.getBonusPrimaryStat() != null){
@@ -170,13 +217,21 @@ public class UGItem {
         ItemMeta itemMeta = item.getItemMeta();
         String powerLine = UnlimitedGrind.getInstance().getConfig().getString("lang.item.condition");
         List<Component> lore = itemMeta.lore();
+        boolean shouldAddSpace = !ugPlayer.canEquipItem(this) && lore.get(1).equals("");
+
         lore.set(1, Component.text(PlaceholderUtils.replace(this, ugPlayer, powerLine)).color(ComponentColor.ERROR.getColor()));
+
+        if(shouldAddSpace){
+            lore.add(Component.text(""));
+        }
+
         itemMeta.lore(lore);
         item.setItemMeta(itemMeta);
     }
 
     private void setupLore(List<String> lore, ItemMeta itemMeta){
         List<Component> loreComp = new ArrayList<>();
+        setupRarityLore(loreComp);
         setupPowerLore(loreComp);
 
         loreComp.add(Component.text(""));
@@ -184,22 +239,56 @@ public class UGItem {
         setupEnchantsLore(loreComp);
         setupPassifLore(loreComp);
 
-        if(lore == null && !passifList.isEmpty()) {
+        if(!passifList.isEmpty()) {
             lore = passifList.get(0).getItemPassif().getLore();
         }
 
         if(lore != null){
             loreComp.add(Component.text(""));
             for (String s : lore) {
-                loreComp.add(Component.text(PlaceholderUtils.replace(this, s)).color(ComponentColor.LORE.getColor()));
+                loreComp.add(Component.text('"' + PlaceholderUtils.replace(this, s) + '"').color(ComponentColor.LORE.getColor()));
             }
         }
         itemMeta.lore(loreComp);
     }
 
+    private void setupRarityLore(List<Component> loreComp) {
+        Component rarityLine = Component.empty();
+        TextColor color = null;
+        if(hasArtifact()) {
+            rarityLine = rarityLine.append(Component.text(artifact.getName() + " "));
+            color = artifact.getColor();
+        }
+        rarityLine = rarityLine.append(Component.text(rarity.getName())).color(color == null ? rarity.getColor() : color);
+        loreComp.add(rarityLine);
+    }
+
     private void setupPowerLore(List<Component> loreComp){
-        String powerLine = UnlimitedGrind.getInstance().getConfig().getString("lang.item.power");
-        loreComp.add(Component.text(PlaceholderUtils.replace(this, powerLine)));
+//        int longestLineInLore = 0;
+//        int size;
+//        PlainTextComponentSerializer serializer = PlainTextComponentSerializer.plainText();
+//        for (Component component : loreComp) {
+//            size = StringUtils.getLineSize(serializer.serialize(component));
+//            if(size > longestLineInLore){
+//                longestLineInLore = size;
+//            }
+//        }
+//
+//        StringBuilder powerLine = new StringBuilder();
+//        int powerLineSize = StringUtils.getLineSize(UnlimitedGrind.getInstance().getConfig().getString("lang.item.power"));
+//
+//        int compensated = StringUtils.getLineSize(serializer.serialize(loreComp.get(0)));
+//        while (compensated < longestLineInLore - (powerLineSize/2)){
+//            powerLine.append(" ");
+//            compensated += DefaultFontInfo.SPACE.getLength() + 1;
+//        }
+//        powerLine.append(UnlimitedGrind.getInstance().getConfig().getString("lang.item.power"));
+        StringBuilder powerLine = new StringBuilder();
+        for (int i = 0; i < 5; i++) {
+            powerLine.append(" ");
+        }
+        powerLine.append(UnlimitedGrind.getInstance().getConfig().getString("lang.item.power"));
+        loreComp.set(0, loreComp.get(0).append(Component.text(PlaceholderUtils.replace(this, powerLine.toString()))));
     }
 
     private void setupStatsLore(List<Component> loreComp){
@@ -362,6 +451,18 @@ public class UGItem {
         return statsMap;
     }
 
+    public boolean hasArtifact(){
+        return artifact != null && !artifact.equals(Artifact.NORMAL);
+    }
+
+    public Artifact getArtefact() {
+        return artifact;
+    }
+
+    public ItemCategory getItemCategory() {
+        return itemCategory;
+    }
+
     public void createRarityParticle(Item item){
         new BukkitRunnable() {
             Location loc;
@@ -398,12 +499,21 @@ public class UGItem {
         if(itemMeta == null) return null;
 
         NamespacedKey powerKey = new NamespacedKey(UnlimitedGrind.getInstance(), "power");
-        if(itemMeta.getPersistentDataContainer().has(powerKey)) {
+        PersistentDataContainer persistentDataContainer = itemMeta.getPersistentDataContainer();
+        if(persistentDataContainer.has(powerKey)) {
             NamespacedKey passifKey = new NamespacedKey(UnlimitedGrind.getInstance(), "passifIdArray");
             NamespacedKey rarityKey = new NamespacedKey(UnlimitedGrind.getInstance(), "rarity");
-            double power = itemMeta.getPersistentDataContainer().get(powerKey, PersistentDataType.DOUBLE);
-            String rarity = itemMeta.getPersistentDataContainer().get(rarityKey, PersistentDataType.STRING);
-            int[] passifs = itemMeta.getPersistentDataContainer().get(passifKey, PersistentDataType.INTEGER_ARRAY);
+            NamespacedKey artefactkey = new NamespacedKey(UnlimitedGrind.getInstance(), "artifact");
+            double power = persistentDataContainer.get(powerKey, PersistentDataType.DOUBLE);
+            String rarity = persistentDataContainer.get(rarityKey, PersistentDataType.STRING);
+            int[] passifs = persistentDataContainer.get(passifKey, PersistentDataType.INTEGER_ARRAY);
+            String artifact = null;
+            if(persistentDataContainer.has(artefactkey, PersistentDataType.STRING)){
+                artifact = persistentDataContainer.get(artefactkey, PersistentDataType.STRING);
+            }
+
+            DropTable dropTableItem = DropTable.valueOf(item.getType().name());
+            ItemCategory itemCategory = dropTableItem.getItemCategory();
 
             HashMap<Stats, Double> statsMap = new HashMap<>();
             NamespacedKey key;
@@ -412,8 +522,8 @@ public class UGItem {
             for (Stats stat : Stats.values()) {
                 if(!stat.isAttribute()){
                     key = new NamespacedKey(UnlimitedGrind.getInstance(), (String) stat.getStats());
-                    if(itemMeta.getPersistentDataContainer().has(key)) {
-                        statsMap.put(stat, itemMeta.getPersistentDataContainer().get(key, PersistentDataType.DOUBLE));
+                    if(persistentDataContainer.has(key)) {
+                        statsMap.put(stat, persistentDataContainer.get(key, PersistentDataType.DOUBLE));
                     }
                 } else {
                     Attribute attribute = (Attribute) stat.getStats();
@@ -435,9 +545,12 @@ public class UGItem {
                     }
                 }
             }
-            return new UGItem(item, Rarity.valueOf(rarity), power, passifs, statsMap);
+            if(artifact == null){
+                return new UGItem(item, Rarity.valueOf(rarity), itemCategory, power, passifs, statsMap);
+            } else {
+                return new UGItem(item, Rarity.valueOf(rarity), Artifact.valueOf(artifact), itemCategory, power, passifs, statsMap);
+            }
         }
         return null;
     }
-
 }

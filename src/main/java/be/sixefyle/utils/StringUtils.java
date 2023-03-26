@@ -10,7 +10,9 @@ import java.util.List;
 public class StringUtils {
     private final static int CENTER_PX = 154;
 
-    private static int getLineSize(String line){
+    public static int getLineSize(String line){
+        if(line == null) return 0;
+
         int messagePxSize = 0;
         boolean previousCode = false;
         boolean isBold = false;

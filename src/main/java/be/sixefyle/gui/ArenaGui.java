@@ -2,7 +2,7 @@ package be.sixefyle.gui;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
-import be.sixefyle.arena.Arena;
+import be.sixefyle.arena.ArenaMap;
 import be.sixefyle.utils.PlaceholderUtils;
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
 import com.iridium.iridiumcore.utils.InventoryUtils;
@@ -10,7 +10,6 @@ import com.iridium.iridiumskyblock.IridiumSkyblock;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
@@ -25,14 +24,14 @@ public class ArenaGui extends UGGui {
 
     private UGPlayer ugPlayer;
     private double currentPower;
-    private Arena arenaMap;
+    private ArenaMap arenaMap;
 
     public ArenaGui(UGPlayer ugPlayer) {
         super(9, "Arena");
 
         this.ugPlayer = ugPlayer;
         currentPower = ugPlayer.getMaxPower() - ugPlayer.getMaxPower() % 100;
-        arenaMap = Arena.ICE;
+        arenaMap = ArenaMap.ICE;
     }
 
     @Override

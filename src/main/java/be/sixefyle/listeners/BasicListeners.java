@@ -3,6 +3,9 @@ package be.sixefyle.listeners;
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.enums.ComponentColor;
+import be.sixefyle.items.DropTable;
+import be.sixefyle.items.ItemAction;
+import be.sixefyle.items.ItemCategory;
 import be.sixefyle.items.UGItem;
 import be.sixefyle.utils.HologramUtils;
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
@@ -12,6 +15,7 @@ import com.iridium.iridiumskyblock.database.User;
 import com.jeff_media.armorequipevent.ArmorEquipEvent;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Damageable;
@@ -27,6 +31,7 @@ import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.jetbrains.annotations.NotNull;
@@ -114,10 +119,12 @@ public class BasicListeners implements Listener {
         Player player = e.getPlayer();
         ItemStack item = e.getItemDrop().getItemStack();
         UGItem ugItem = UGItem.getFromItemStack(item);
-        if(ugItem != null){
-            ugItem.createRarityParticle(e.getItemDrop());
-            UGPlayer.GetUGPlayer(player).updateStatsFromItem(null, ugItem);
-        }
+
+        if(ugItem == null) return;
+        if(ugItem.getItemCategory().equals(ItemCategory.ARMOR)) return;
+
+        ugItem.createRarityParticle(e.getItemDrop());
+        UGPlayer.GetUGPlayer(player).updateStatsFromItem(null, ugItem, ItemAction.DROP);
     }
 
     @EventHandler
@@ -126,13 +133,15 @@ public class BasicListeners implements Listener {
             ItemStack itemStack = e.getItem().getItemStack();
             UGItem ugItem = UGItem.getFromItemStack(itemStack);
 
+            if(ugItem == null) return;
+            if(ugItem.getItemCategory().equals(ItemCategory.ARMOR)) return;
+
             Bukkit.getScheduler().runTaskLater(UnlimitedGrind.getInstance(), () -> {
                 if(player.getInventory().getItemInMainHand().equals(itemStack)){
-                    UGPlayer.GetUGPlayer(player).updateStatsFromItem(ugItem, null);
+                    UGPlayer.GetUGPlayer(player).updateStatsFromItem(ugItem, null, ItemAction.PICKUP);
                 }
             }, 1);
 
-            if(ugItem == null) return;
             ugItem.updateConditionLore(UGPlayer.GetUGPlayer(player));
         }
     }
@@ -187,12 +196,60 @@ public class BasicListeners implements Listener {
 
         if(ugPlayer.canEquipItem(newItem)){
             ugPlayer.updateWearedPower(newItem, oldItem);
-            ugPlayer.updateStatsFromItem(newItem, oldItem);
+            ugPlayer.updateStatsFromItem(newItem, oldItem, ItemAction.HAND);
         } else {
             e.setCancelled(true);
             player.sendMessage(
                     Component.text(UnlimitedGrind.getInstance().getConfig().getString("lang.item.error.notEnoughPower"))
                             .color(ComponentColor.ERROR.getColor()));
+        }
+    }
+
+    private boolean equipOffHand(Player player, ItemStack newItemStack, ItemStack oldItemStack){
+        UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+        UGItem newItem = UGItem.getFromItemStack(newItemStack);
+        UGItem oldItem = UGItem.getFromItemStack(oldItemStack);
+
+        if(ugPlayer.canEquipItem(newItem)){
+            ugPlayer.updateWearedPower(newItem, oldItem);
+            ugPlayer.updateStatsFromItem(newItem, oldItem, ItemAction.OFF_HAND);
+        } else {
+            player.sendMessage(
+                    Component.text(UnlimitedGrind.getInstance().getConfig().getString("lang.item.error.notEnoughPower"))
+                            .color(ComponentColor.ERROR.getColor()));
+            return true;
+        }
+        return false;
+    }
+
+    @EventHandler
+    public void handItemSwap(PlayerSwapHandItemsEvent e){
+        e.setCancelled(equipOffHand(e.getPlayer(), e.getOffHandItem(), e.getMainHandItem()));
+    }
+
+    @EventHandler
+    public void onOffHandEquip(InventoryClickEvent e){
+        int slot = e.getSlot();
+        ItemStack currentItem = e.getCurrentItem();
+        Player player = (Player) e.getWhoClicked();
+        Inventory inv = e.getInventory();
+
+        if(slot == 40){
+            e.setCancelled(equipOffHand(player, e.getCursor(), currentItem));
+        }
+
+        if(e.isShiftClick() && currentItem != null && currentItem.getType() == Material.SHIELD){
+            e.setCancelled(equipOffHand(player, currentItem, inv.getItem(40)));
+        }
+    }
+
+
+    @EventHandler
+    public void onOffHandEquipDrag(InventoryDragEvent e){
+        for (Integer inventorySlot : e.getInventorySlots()) {
+            if(inventorySlot == 40){
+                e.setCancelled(equipOffHand((Player) e.getWhoClicked(), e.getOldCursor(), e.getCursor()));
+            }
         }
     }
 
@@ -211,10 +268,8 @@ public class BasicListeners implements Listener {
 
 
         if(ugPlayer.canEquipItem(ugNewItem)) {
-            ugPlayer.updateStatsFromItem(ugNewItem, ugOldItem);
-
+            ugPlayer.updateStatsFromItem(ugNewItem, ugOldItem, ItemAction.EQUIP);
             ugPlayer.updateEquippedWearedPower();
-            ugPlayer.setHealthFromStat();
 
             Player player = e.getPlayer();
 
