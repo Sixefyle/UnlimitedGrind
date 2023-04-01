@@ -4,6 +4,7 @@ import be.sixefyle.UGSpawner;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.gui.SpawnerGui;
 import be.sixefyle.utils.HologramUtils;
+import be.sixefyle.utils.StringUtils;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import com.iridium.iridiumskyblock.database.Island;
 import org.bukkit.Location;
@@ -18,6 +19,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.SpawnerSpawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.persistence.PersistentDataType;
@@ -33,16 +35,40 @@ public class SpawnerListener implements Listener {
         if(block == null) return;
 
         Player player = e.getPlayer();
-        if(player.isSneaking()) return;
+        boolean isSneaking = player.isSneaking();
 
         if(block.getType().equals(Material.SPAWNER) && e.getAction().isRightClick()){
             CreatureSpawner spawner = (CreatureSpawner) block.getState();
             UGSpawner betterSpawner = UGSpawner.getBetterSpawner(spawner.getLocation());
-            if(player.getInventory().getItemInMainHand().getType().name().contains("_SPAWN_EGG") &&
-                    (!spawner.getSpawnedType().isSpawnable() || betterSpawner.getStackAmount() == 1)) return;
+            ItemStack handItem = player.getInventory().getItemInMainHand();
 
-            e.setCancelled(true);
-            player.openInventory(new SpawnerGui(spawner).getInventory());
+            boolean isSpawnEgg = handItem.getType().name().contains("_SPAWN_EGG");
+            if(isSpawnEgg){
+                String spawnEggType = handItem.getType().name().split("_")[0];
+                boolean isSameEntityType = spawner.getSpawnedType().name().contains(spawnEggType);
+
+
+                if(!spawner.getSpawnedType().isSpawnable() || (betterSpawner.getStackAmount() == 1 && !isSameEntityType)) return;
+
+                if(isSameEntityType) {
+                    e.setCancelled(true);
+                    int eggToUse = 1;
+                    if(isSneaking){
+                       eggToUse = Math.min(handItem.getAmount(), 64);
+                       if(betterSpawner.getStackAmount() + eggToUse > betterSpawner.getMaxStackAmount()){
+                           eggToUse = betterSpawner.getMaxStackAmount() - betterSpawner.getStackAmount();
+                       }
+                    }
+                    if(betterSpawner.addStackAmount(eggToUse)){
+                        handItem.setAmount(handItem.getAmount() - eggToUse);
+                    }
+                }
+            } else {
+                if(isSneaking) return;
+
+                e.setCancelled(true);
+                player.openInventory(new SpawnerGui(spawner).getInventory());
+            }
         }
     }
 

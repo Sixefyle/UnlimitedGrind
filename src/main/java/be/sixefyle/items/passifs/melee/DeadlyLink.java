@@ -1,6 +1,7 @@
 package be.sixefyle.items.passifs.melee;
 
 import be.sixefyle.UnlimitedGrind;
+import be.sixefyle.items.UGItem;
 import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.passifs.interfaces.OnMeleeHit;
 import be.sixefyle.items.passifs.interfaces.Stackable;
@@ -11,6 +12,7 @@ import com.iridium.iridiumcore.dependencies.nbtapi.NBTItem;
 import org.bukkit.*;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
@@ -21,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class DeadlyLink extends ItemPassif implements OnMeleeHit, Stackable {
-    private HashMap<Player, List<Damageable>> links;
+    private HashMap<Player, List<LivingEntity>> links;
     private int linkTime = 200;
     private double sharedDamagePercent = .55;
 
@@ -38,17 +40,17 @@ public class DeadlyLink extends ItemPassif implements OnMeleeHit, Stackable {
 
 
     private void createLinkParticle(Player player){
-        List<Damageable> damageables = links.get(player);
-        Damageable startEntity = damageables.get(0);
-        damageables.remove(0);
+        List<LivingEntity> livingEntities = links.get(player);
+        Damageable startEntity = livingEntities.get(0);
+        livingEntities.remove(0);
         new BukkitRunnable() {
             @Override
             public void run() {
                 if(!links.containsKey(player)) cancel();
-                for (Damageable damageable : damageables) {
+                for (LivingEntity livingEntity : livingEntities) {
                     ParticleUtils.drawBeam(
                             startEntity.getLocation().toCenterLocation(),
-                            damageable.getLocation().toCenterLocation(),
+                            livingEntity.getLocation().toCenterLocation(),
                             Particle.CRIT
                     );
                 }
@@ -80,40 +82,43 @@ public class DeadlyLink extends ItemPassif implements OnMeleeHit, Stackable {
     @Override
     public void doDamage(EntityDamageByEntityEvent e, Player player) {
         double mitigatedDamage = 0;
+        LivingEntity targetEntity = (LivingEntity) e.getEntity();
         if(links.containsKey(player)){
-            List<Damageable> linkedEntities = links.get(player);
-            Damageable damagedEntity = (Damageable) e.getEntity();
+            List<LivingEntity> linkedEntities = links.get(player);
 
-            mitigatedDamage = e.getDamage() * sharedDamagePercent;
+            mitigatedDamage = e.getFinalDamage() * sharedDamagePercent;
 
-            if(linkedEntities.contains(damagedEntity)) {
+            if(linkedEntities.contains(targetEntity)) {
                 for (Damageable damageable : linkedEntities) {
-                    if(damageable.equals(damagedEntity)) continue;
+                    if(damageable.equals(targetEntity)) continue;
 
                     damageable.damage(mitigatedDamage);
                     HologramUtils.createDamageIndicator(damageable.getLocation(), NumberUtils.format(mitigatedDamage), ChatColor.AQUA);
                 }
             }
         } else {
-            Object[] livingEntities = player.getLocation().getNearbyLivingEntities(5).toArray();
-            List<Damageable> damageables = new ArrayList<>();
+            ItemStack weapon = player.getInventory().getItemInMainHand();
+            List<LivingEntity> livingEntities = targetEntity.getLocation().getNearbyLivingEntities(5)
+                    .stream()
+                    .filter(ent -> ent instanceof Monster)
+                    .toList();
 
-            damageables.add((Damageable) e.getEntity());
-            Damageable currentEntity;
+            livingEntities.add((LivingEntity) e.getEntity());
+            LivingEntity currentEntity;
             int i = 0;
             int playerAmount = 0;
-            while(i < getStrength() + getMythicBonus()){
-                if(i >= livingEntities.length - playerAmount) break;
-                currentEntity = (Damageable) livingEntities[i];
+            while(i < getStrength() + getMythicBonus(UGItem.isMythic(weapon))){
+                if(i >= livingEntities.size() - playerAmount) break;
+                currentEntity = livingEntities.get(i);
                 if(currentEntity instanceof Player) {
                     playerAmount++;
                     continue;
-                };
-                damageables.add(currentEntity);
+                }
+                livingEntities.add(currentEntity);
                 i++;
             }
 
-            links.put(player, damageables);
+            links.put(player, livingEntities);
             createLinkTimer(player);
         }
 

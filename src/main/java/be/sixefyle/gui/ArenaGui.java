@@ -4,7 +4,7 @@ import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.arena.ArenaMap;
 import be.sixefyle.utils.PlaceholderUtils;
-import com.iridium.iridiumcolorapi.IridiumColorAPI;
+import com.iridium.iridiumcore.dependencies.iridiumcolorapi.IridiumColorAPI;
 import com.iridium.iridiumcore.utils.InventoryUtils;
 import com.iridium.iridiumskyblock.IridiumSkyblock;
 import net.kyori.adventure.text.Component;
@@ -62,7 +62,7 @@ public class ArenaGui extends UGGui {
                 }
             }
         } else if(itemType.equals(icons[1])) { // start button
-            ugPlayer.joinPveArena(arenaMap, currentPower);
+            ugPlayer.joinArena(arenaMap, currentPower);
         }
     }
 

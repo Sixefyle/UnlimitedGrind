@@ -55,8 +55,11 @@ public class Group {
         }
 
         if(pendingInvit.contains(ugPlayer)){
+            ugPlayer.setGroup(this);
             members.add(ugPlayer);
             pendingInvit.remove(ugPlayer);
+
+            sendMessageToGroup(Component.text(ugPlayer.getPlayer().getName() + " has join the group!"));
             return true;
         }
         return false;

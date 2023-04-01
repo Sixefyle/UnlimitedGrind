@@ -6,7 +6,7 @@ import be.sixefyle.enums.Symbols;
 import be.sixefyle.gui.ArenaGui;
 import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.UGItem;
-import com.iridium.iridiumcolorapi.IridiumColorAPI;
+import com.iridium.iridiumcore.dependencies.iridiumcolorapi.IridiumColorAPI;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Damageable;

@@ -2,13 +2,14 @@ package be.sixefyle.items;
 
 import net.kyori.adventure.text.format.TextColor;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public enum Artifact {
     NORMAL(null, "", 100, 1),
     ANCIENT(TextColor.color(178, 91, 2), "Ancient", 50, 1.1),
-    PRIMALIST(TextColor.color(119, 61, 255), "Primalist", 50.5, 1.15),
-    FORGED_BY_GODS(TextColor.color(215, 196, 0), "Forged By Gods", 50.01, 1.25),
+    PRIMALIST(TextColor.color(119, 61, 255), "Primalist", 0.5, 1.15),
+    FORGED_BY_GODS(TextColor.color(215, 196, 0), "Forged By Gods", 0.01, 1.25),
     ;
 
     private final TextColor color;
@@ -39,26 +40,18 @@ public enum Artifact {
         return attributeBonusPercentage;
     }
 
-    public static double getWeightTotal(){
-        double total = 0;
-        for (Artifact value : Artifact.values()) {
-            total += value.getDropWeight();
-        }
-        return total;
-    }
+    private static final Random random = new Random();
+    private static final double weightTotal = Arrays.stream(Artifact.values()).mapToDouble(Artifact::getDropWeight).sum();
 
-    public static Artifact getRandomArtifact(){
-        Random random = new Random();
-        double randomNum = random.nextDouble(getWeightTotal());
-        double currentWeightSumm = 0;
-        for(Artifact currentArtefact : Artifact.values()) {
-            if (randomNum > currentWeightSumm &&
-                    randomNum <= (currentWeightSumm + currentArtefact.getDropWeight())) {
-                return currentArtefact;
+    public static Artifact getRandomArtifact() {
+        double randomNum = random.nextDouble(weightTotal);
+        int currentWeightSum = 0;
+        for (Artifact currentArtifact : Artifact.values()) {
+            currentWeightSum += currentArtifact.getDropWeight();
+            if (randomNum < currentWeightSum) {
+                return currentArtifact;
             }
-            currentWeightSumm += currentArtefact.getDropWeight();
         }
-
         return null;
     }
 }

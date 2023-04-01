@@ -2,6 +2,7 @@ package be.sixefyle.commands;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.group.Group;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -27,26 +28,29 @@ public class GroupCommand implements CommandExecutor, TabCompleter {
                 Player target = Bukkit.getPlayer(targetName);
                 if(target == null){
                     commandSender.sendMessage("§cThis player is not connected!");
+                    return true;
                 }
 
+                UGPlayer ugTarget = UGPlayer.GetUGPlayer(target);
                 if(ugSender.getGroup() == null){
                     group = ugSender.setGroup(new Group(ugSender));
                 } else {
                     group = ugSender.getGroup();
                 }
-                if(group.getMembers().contains(target)){
+                if(group.getMembers().contains(ugTarget)){
                     commandSender.sendMessage("§cThis player is already in your group!");
                 } else {
-                    group.askPlayerToJoin(UGPlayer.GetUGPlayer(target));
+                    group.askPlayerToJoin(ugTarget);
                 }
             } else if(subcommand.equals("accept")) {
                 group = Group.getByOwnerName(args[1]);
-                if(group != null && group.addPlayer(ugSender)){
-                    commandSender.sendMessage("§aYou have joined the group!");
+                if(group != null){
+                    group.addPlayer(ugSender);
                 }
             } else if(subcommand.equals("decline")) {
                 group = Group.getByOwnerName(args[1]);
                 if(group != null && group.removePendingInvite(ugSender)){
+                    group.getOwner().getPlayer().sendMessage(Component.text(commandSender.getName() + " has declined the invitation!"));
                     commandSender.sendMessage("§eYou declined the invitation!");
                 }
             }
@@ -63,8 +67,9 @@ public class GroupCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender commandSender, Command command, String s, String[] args) {
-        List<String> completions = new ArrayList<>();
+        List<String> completions = null;
         if(args.length == 1){
+            completions = new ArrayList<>();
             completions.add("invite");
             completions.add("accept");
             completions.add("decline");

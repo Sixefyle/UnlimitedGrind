@@ -4,23 +4,23 @@ public enum ItemAction {
     PICKUP,
     DROP,
     EQUIP,
-    HAND,
-    OFF_HAND,
+    HOLD,
+    HOLD_OFF_HAND,
     ;
 
     public static boolean shouldAffectStats(UGItem ugItem, ItemAction action){
         if(ugItem == null) return false;
-        ItemCategory itemCategory = ugItem.getItemCategory();
+        ItemCategory itemCategory = ugItem.getItemCategories();
         if(action.equals(PICKUP)){
-            return itemCategory.equals(ItemCategory.MELEE_DISTANCE);
+            return itemCategory.equals(ItemCategory.MELEE) || itemCategory.equals(ItemCategory.DISTANCE);
         }
         if(action.equals(DROP)){
-            return itemCategory.equals(ItemCategory.MELEE_DISTANCE);
+            return itemCategory.equals(ItemCategory.MELEE) || itemCategory.equals(ItemCategory.DISTANCE);
         }
-        if(action.equals(HAND)){
-            return itemCategory.equals(ItemCategory.MELEE_DISTANCE);
+        if(action.equals(HOLD)){
+            return itemCategory.equals(ItemCategory.MELEE) || itemCategory.equals(ItemCategory.DISTANCE);
         }
-        if(action.equals(OFF_HAND)){
+        if(action.equals(HOLD_OFF_HAND)){
             return itemCategory.equals(ItemCategory.SHIELD);
         }
         if (action.equals(EQUIP)) {

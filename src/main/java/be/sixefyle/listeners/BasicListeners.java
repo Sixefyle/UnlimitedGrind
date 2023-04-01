@@ -3,7 +3,6 @@ package be.sixefyle.listeners;
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.enums.ComponentColor;
-import be.sixefyle.items.DropTable;
 import be.sixefyle.items.ItemAction;
 import be.sixefyle.items.ItemCategory;
 import be.sixefyle.items.UGItem;
@@ -73,44 +72,49 @@ public class BasicListeners implements Listener {
     }
 
     @EventHandler
-    public void onEntitySpawn(EntitySpawnEvent e){
-        if(e.getEntity() instanceof Damageable damageable) {
-            @NotNull Optional<Island> island = IridiumSkyblockAPI.getInstance().getIslandViaLocation(damageable.getLocation());
-            if(island.isEmpty()) return;
+    public void onEntitySpawn(CreatureSpawnEvent e){
+        if(e.isCancelled()) return;
+        if(e.getSpawnReason().equals(CreatureSpawnEvent.SpawnReason.SPAWNER)) return;
 
-            UGPlayer ugPlayer;
-            double maxPower = 0;
-            for (User member : island.get().getMembers()) {
-                if(member.getPlayer() == null) continue;
+        LivingEntity damageable = e.getEntity();
+        @NotNull Optional<Island> island = IridiumSkyblockAPI.getInstance().getIslandViaLocation(damageable.getLocation());
+        if(island.isEmpty()) return;
 
-                ugPlayer = UGPlayer.GetUGPlayer(member.getPlayer());
-                if(maxPower < ugPlayer.getWearedPower()){
-                    maxPower = ugPlayer.getWearedPower();
-                }
+        UGPlayer ugPlayer;
+        double maxPower = 0;
+        for (User member : island.get().getMembers()) {
+            if(member.getPlayer() == null) continue;
+
+            ugPlayer = UGPlayer.GetUGPlayer(member.getPlayer());
+            if(maxPower < ugPlayer.getWearedPower()){
+                maxPower = ugPlayer.getWearedPower();
             }
-
-            double newHealth = damageable.getMaxHealth()+(damageable.getMaxHealth()*(maxPower/50))*(Math.pow(maxPower,.78)/100+1); //TODO: magic number
-
-            damageable.setMaxHealth(newHealth);
-            damageable.setHealth(newHealth);
-
-            HologramUtils.createEntInfoFollow(damageable);
-
-            damageable.setCustomNameVisible(false);
-            damageable.setMetadata("power", new FixedMetadataValue(UnlimitedGrind.getInstance(), maxPower));
-            ((LivingEntity) damageable).setMaximumNoDamageTicks(3);
         }
+
+        double newHealth = damageable.getMaxHealth()+(damageable.getMaxHealth()*(maxPower/50))*(Math.pow(maxPower,.78)/100+1); //TODO: magic number
+
+        damageable.setMaxHealth(newHealth);
+        damageable.setHealth(newHealth);
+
+        HologramUtils.createEntInfoFollow(damageable);
+
+        damageable.setCustomNameVisible(false);
+        damageable.setMetadata("power", new FixedMetadataValue(UnlimitedGrind.getInstance(), maxPower));
+        damageable.setMaximumNoDamageTicks(3);
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e){
         Player player = e.getPlayer();
+        UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
         for (Attribute value : Attribute.values()) {
             if(player.getAttribute(value) == null) continue;
             for (AttributeModifier modifier : player.getAttribute(value).getModifiers()) {
                 player.getAttribute(value).removeModifier(modifier);
             }
         }
+
+        ugPlayer.leaveGroup();
         UGPlayer.RemoveUGPlayer(player);
     }
 
@@ -121,7 +125,7 @@ public class BasicListeners implements Listener {
         UGItem ugItem = UGItem.getFromItemStack(item);
 
         if(ugItem == null) return;
-        if(ugItem.getItemCategory().equals(ItemCategory.ARMOR)) return;
+        if(ugItem.getItemCategories().equals(ItemCategory.ARMOR)) return;
 
         ugItem.createRarityParticle(e.getItemDrop());
         UGPlayer.GetUGPlayer(player).updateStatsFromItem(null, ugItem, ItemAction.DROP);
@@ -134,7 +138,7 @@ public class BasicListeners implements Listener {
             UGItem ugItem = UGItem.getFromItemStack(itemStack);
 
             if(ugItem == null) return;
-            if(ugItem.getItemCategory().equals(ItemCategory.ARMOR)) return;
+            if(ugItem.getItemCategories().equals(ItemCategory.ARMOR)) return;
 
             Bukkit.getScheduler().runTaskLater(UnlimitedGrind.getInstance(), () -> {
                 if(player.getInventory().getItemInMainHand().equals(itemStack)){
@@ -195,8 +199,8 @@ public class BasicListeners implements Listener {
         UGItem oldItem = UGItem.getFromItemStack(oldItemStack);
 
         if(ugPlayer.canEquipItem(newItem)){
-            ugPlayer.updateWearedPower(newItem, oldItem);
-            ugPlayer.updateStatsFromItem(newItem, oldItem, ItemAction.HAND);
+            ugPlayer.updateWearedPower(newItem, oldItem, ItemAction.HOLD);
+            ugPlayer.updateStatsFromItem(newItem, oldItem, ItemAction.HOLD);
         } else {
             e.setCancelled(true);
             player.sendMessage(
@@ -211,8 +215,8 @@ public class BasicListeners implements Listener {
         UGItem oldItem = UGItem.getFromItemStack(oldItemStack);
 
         if(ugPlayer.canEquipItem(newItem)){
-            ugPlayer.updateWearedPower(newItem, oldItem);
-            ugPlayer.updateStatsFromItem(newItem, oldItem, ItemAction.OFF_HAND);
+            ugPlayer.updateWearedPower(newItem, oldItem, ItemAction.HOLD_OFF_HAND);
+            ugPlayer.updateStatsFromItem(newItem, oldItem, ItemAction.HOLD_OFF_HAND);
         } else {
             player.sendMessage(
                     Component.text(UnlimitedGrind.getInstance().getConfig().getString("lang.item.error.notEnoughPower"))

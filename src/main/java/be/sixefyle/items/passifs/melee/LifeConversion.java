@@ -39,7 +39,7 @@ public class LifeConversion extends ItemPassif implements OnEquip {
         ugPlayer.setMaxHealth(1);
         ugPlayer.setHealthLocked(true);
 
-        double bonusDamagePercent = getStrength() + (UGItem.isMythic(item) ? getMythicBonus() : 0);
+        double bonusDamagePercent = getStrength() + (UGItem.isMythic(item) ? getMythicBonus(UGItem.isMythic(item)) : 0);
         players.get(player).add(new AttributeModifier(
                 attributeName,
                 bonusDamagePercent,

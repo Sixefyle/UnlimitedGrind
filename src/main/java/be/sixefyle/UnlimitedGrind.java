@@ -4,6 +4,7 @@ import be.sixefyle.arena.WorldManager;
 import be.sixefyle.arena.pve.PveArenaListener;
 import be.sixefyle.commands.*;
 import be.sixefyle.enums.Symbols;
+import be.sixefyle.gui.GuiManager;
 import be.sixefyle.items.ItemManager;
 import be.sixefyle.listeners.*;
 import com.comphenix.protocol.PacketType;
@@ -26,7 +27,9 @@ import fr.skytasul.glowingentities.GlowingEntities;
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
+import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -67,6 +70,8 @@ public class UnlimitedGrind extends JavaPlugin {
         pluginManager.registerEvents(new StatsListener(), this);
         pluginManager.registerEvents(new EffectListener(), this);
         pluginManager.registerEvents(new IslandListener(), this);
+        pluginManager.registerEvents(new AnvilListener(), this);
+        pluginManager.registerEvents(new GuiManager(), this);
 
         getCommand("ugreload").setExecutor(new ReloadCommand());
         getCommand("power").setExecutor(new PowerCommand());
@@ -290,7 +295,7 @@ public class UnlimitedGrind extends JavaPlugin {
             add("&7Reduce all incoming damage by &e%strength%%");
         }});
 
-        config.set("itemPassif.thunderStorm.strength", 3.5);
+        config.set("itemPassif.thunderStorm.strength", 1.0);
         config.set("itemPassif.thunderStorm.name", "&bThunder Storm");
         config.set("itemPassif.thunderStorm.description", new ArrayList<>() {{
             add("&7Small chance to let rain a thunder storm to all");
@@ -341,36 +346,13 @@ public class UnlimitedGrind extends JavaPlugin {
         Item borderItem = islandMenu.items.get("is border");
         islandMenu.items.remove("is border");
         islandMenu.items.replace("is missions", new Item(XMaterial.FLOWER_BANNER_PATTERN, 4, 1, missionItem.displayName, missionItem.lore));
-        islandMenu.items.put("arena", new Item(XMaterial.END_CRYSTAL, 22, 1, "\"&b&lArena", List.of("&7Fight creature in an arena!")));
+        islandMenu.items.put("arena", new Item(XMaterial.END_CRYSTAL, 22, 1, "&c&lArena", List.of("&7Fight creature in an arena!")));
         islandMenu.items.put("is shop", new Item(XMaterial.GOLD_INGOT, borderItem.slot, 1, "&b&lShop", List.of("&7Buy somethings for your island!")));
     }
 
     public void initNewUpgrade(){
         IridiumSkyblock.getInstance().getUpgradesList().remove("PowerUpgrade");
         IridiumSkyblock.getInstance().getInventories().upgradesGUI.size = 36;
-
-        Map<Integer, UpgradeData> defaultLevel = new HashMap<>();
-        int crystalCost = 10;
-        for (int i = 1; i < 2; i++) { //TODO: trouver une autre facon
-            defaultLevel.put(i, new UpgradeData(0, crystalCost));
-            crystalCost = (int)(crystalCost + i * 1.1);
-        }
-
-        Upgrade<UpgradeData> powerUpgrade = new Upgrade<>(true, "Power Upgrade",
-                new Item(XMaterial.IRON_SWORD, 22, 1, "&bPower Upgrade &7[&a%level%&2/∞&7]", Arrays.asList(
-                        "&7Need more room to expand? Buy this",
-                        "&7upgrade to increase your island size.",
-                        "",
-                        "&b&lInformation:",
-                        "&b&l * &7Current Level: &b%level%",
-                        "&b&l * &7Power Gained: 0 power",
-                        "&b&l * &7Upgrade Cost: &b%crystalscost% Crystals",
-                        "&b&lLevels:",
-                        "&b&l * &7Gain &b10 Power per level",
-                        "",
-                        "&b&l[!] &bLeft Click to Purchase this Upgrade"
-                )), defaultLevel);
-        IridiumSkyblockAPI.getInstance().addUpgrade("PowerUpgrade", powerUpgrade);
 
         Upgrade<UpgradeData> generatorSpeedUpgrade = new Upgrade<>(true, "Generator Speed Upgrade",
                 new Item(XMaterial.IRON_PICKAXE, 24, 1, "&bGenerator Speed Upgrade &7[&a%level%&2/5&7]", Arrays.asList(
@@ -389,11 +371,11 @@ public class UnlimitedGrind extends JavaPlugin {
                         "",
                         "&b&l[!] &bLeft Click to Purchase this Upgrade"
                 )), ImmutableMap.<Integer, UpgradeData>builder()
-                .put(1, new UpgradeData(0, 0))
-                .put(2, new UpgradeData(0, 0))
-                .put(3, new UpgradeData(0, 0))
-                .put(4, new UpgradeData(0, 0))
-                .put(5, new UpgradeData(0, 0))
+                .put(1, new UpgradeData(0, 10))
+                .put(2, new UpgradeData(0, 10))
+                .put(3, new UpgradeData(0, 10))
+                .put(4, new UpgradeData(0, 10))
+                .put(5, new UpgradeData(0, 10))
                 .build());
         IridiumSkyblockAPI.getInstance().addUpgrade("GeneratorSpeedUpgrade", generatorSpeedUpgrade);
     }

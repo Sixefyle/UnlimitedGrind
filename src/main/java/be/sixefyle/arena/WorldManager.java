@@ -9,6 +9,8 @@ import org.bukkit.*;
 import org.bukkit.entity.Player;
 
 import java.io.*;
+import java.util.UUID;
+
 public class WorldManager {
 
     private static boolean unzipWorldAndRename(ArenaMap arena, String worldName){
@@ -24,13 +26,12 @@ public class WorldManager {
         }
     }
 
-    public static boolean createVoidAndTeleport(Player owner, Group group, ArenaMap arena){
-        String worldName = "arena_" + owner.getUniqueId();
+    public static World createArenaMap(UUID worldUUID, ArenaMap arena){
+        String worldName = "arena_" + worldUUID;
         if(unzipWorldAndRename(arena, worldName)){
             WorldCreator worldCreator = new WorldCreator(worldName);
             worldCreator.generator(new EmptyWorld());
-            worldCreator.createWorld();
-            World world = Bukkit.getWorld(worldName);
+            World world = worldCreator.createWorld();
 
             world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
             world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
@@ -42,24 +43,9 @@ public class WorldManager {
             world.setGameRule(GameRule.RANDOM_TICK_SPEED, 0);
 
             world.setTime(13000);
-
-            Location loc = arena.getPlayerSpawnLocs().get((int) (Math.random() * arena.getPlayerSpawnLocs().size())).clone();
-            loc.setWorld(world);
-
-            if(group != null) {
-                for (UGPlayer member : group.getMembers()) {
-                    member.getPlayer().teleport(loc);
-                }
-            } else {
-                owner.teleport(loc);
-            }
-            return true;
+            return world;
         }
-        return false;
-    }
-
-    public static boolean createVoidAndTeleport(Player owner, ArenaMap arena){
-        return createVoidAndTeleport(owner, null, arena);
+        return null;
     }
 
 //    public static boolean createArena(Location loc, String schematicName){

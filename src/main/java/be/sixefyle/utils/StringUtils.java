@@ -1,11 +1,13 @@
 package be.sixefyle.utils;
 
-import com.iridium.iridiumcolorapi.IridiumColorAPI;
 import com.iridium.iridiumcore.DefaultFontInfo;
+import com.iridium.iridiumcore.dependencies.iridiumcolorapi.IridiumColorAPI;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StringUtils {
     private final static int CENTER_PX = 154;
@@ -46,6 +48,15 @@ public class StringUtils {
             }
         }
         return size;
+    }
+
+    public static String regexFindBeforeUnderscore(String text){
+        Pattern pattern = Pattern.compile("(\\w+)_");
+        Matcher matcher = pattern.matcher(text);
+        if(matcher.find()){
+            return matcher.group(0);
+        }
+        return null;
     }
 
     public static String getCenteredText(String message, List<String> list){

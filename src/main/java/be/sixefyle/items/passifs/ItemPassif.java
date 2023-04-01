@@ -64,8 +64,8 @@ public abstract class ItemPassif {
         return strength;
     }
 
-    public double getMythicBonus() {
-        return mythicBonus;
+    public double getMythicBonus(boolean isMythic) {
+        return isMythic ? mythicBonus : 0;
     }
 
     public double getReadableMythicBonus(){

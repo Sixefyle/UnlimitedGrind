@@ -9,7 +9,7 @@ import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.passifs.Passif;
 import be.sixefyle.utils.NumberUtils;
 import be.sixefyle.utils.PlaceholderUtils;
-import com.iridium.iridiumcolorapi.IridiumColorAPI;
+import com.iridium.iridiumcore.dependencies.iridiumcolorapi.IridiumColorAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -38,14 +38,14 @@ public class UGItem {
     private Artifact artifact;
     private List<Passif> passifList = new ArrayList<>();
     private HashMap<Stats, Double> statsMap = new HashMap<>();
-    private ItemCategory itemCategory;
+    private ItemCategory itemCategories;
 
     public UGItem(ItemStack itemStack, Rarity rarity, Artifact artefact, ItemCategory itemCategory, double power, int[] passifIDs, HashMap<Stats, Double> statsMap) {
         this.power = power;
         this.item = itemStack;
         this.rarity = rarity;
         this.artifact = artefact;
-        this.itemCategory = itemCategory;
+        this.itemCategories = itemCategory;
 
         Passif passif;
         for (int id : passifIDs) {
@@ -106,9 +106,9 @@ public class UGItem {
                 new NamespacedKey(UnlimitedGrind.getInstance(), "passifIdArray"), PersistentDataType.INTEGER_ARRAY, passifIds);
 
         DropTable dropTableItem = DropTable.valueOf(item.getType().name());
-        itemCategory = dropTableItem.getItemCategory();
+        itemCategories = dropTableItem.getItemCategory();
         boolean isNetherite = item.getType().name().contains("NETHERITE");
-        if(itemCategory.equals(ItemCategory.MELEE)) {
+        if(itemCategories.equals(ItemCategory.MELEE)) {
             double weapDamage;
             double weapStrength;
             double weapAttackSpeed;
@@ -153,17 +153,17 @@ public class UGItem {
 
             addRandomStats(itemStatsList, itemMeta, dropTableItem.getSlot());
 
-        } else if(itemCategory.equals(ItemCategory.ARMOR) || itemCategory.equals(ItemCategory.SHIELD)) {
+        } else if(itemCategories.equals(ItemCategory.ARMOR) || itemCategories.equals(ItemCategory.SHIELD)) {
             double armorValue;
             double vitality;
             double strength;
 
             if(!isNetherite){
-                armorValue = Math.min(Math.pow(getPower(), 0.7012), Stats.ARMOR.getMax());
+                armorValue = Math.min(Math.pow(getPower(), 0.7812), Stats.ARMOR.getMax());
                 vitality = Math.pow(getPower(), .57);
                 strength = Math.pow(getPower(), .67);
             } else {
-                armorValue = NumberUtils.getRandomNumber(Math.pow(getPower(), 0.6912), Math.pow(getPower(), 0.7012));
+                armorValue = NumberUtils.getRandomNumber(Math.pow(getPower(), 0.7712), Math.pow(getPower(), 0.7812));
                 armorValue = Double.min(armorValue, Stats.ARMOR.getMax());
                 vitality = NumberUtils.getRandomNumber(Math.pow(getPower(), .57), Math.pow(getPower(), .55));
                 strength = NumberUtils.getRandomNumber(Math.pow(getPower(), .67), Math.pow(getPower(), .65));
@@ -264,25 +264,7 @@ public class UGItem {
     }
 
     private void setupPowerLore(List<Component> loreComp){
-//        int longestLineInLore = 0;
-//        int size;
-//        PlainTextComponentSerializer serializer = PlainTextComponentSerializer.plainText();
-//        for (Component component : loreComp) {
-//            size = StringUtils.getLineSize(serializer.serialize(component));
-//            if(size > longestLineInLore){
-//                longestLineInLore = size;
-//            }
-//        }
-//
-//        StringBuilder powerLine = new StringBuilder();
-//        int powerLineSize = StringUtils.getLineSize(UnlimitedGrind.getInstance().getConfig().getString("lang.item.power"));
-//
-//        int compensated = StringUtils.getLineSize(serializer.serialize(loreComp.get(0)));
-//        while (compensated < longestLineInLore - (powerLineSize/2)){
-//            powerLine.append(" ");
-//            compensated += DefaultFontInfo.SPACE.getLength() + 1;
-//        }
-//        powerLine.append(UnlimitedGrind.getInstance().getConfig().getString("lang.item.power"));
+
         StringBuilder powerLine = new StringBuilder();
         for (int i = 0; i < 5; i++) {
             powerLine.append(" ");
@@ -459,8 +441,8 @@ public class UGItem {
         return artifact;
     }
 
-    public ItemCategory getItemCategory() {
-        return itemCategory;
+    public ItemCategory getItemCategories() {
+        return itemCategories;
     }
 
     public void createRarityParticle(Item item){
@@ -499,10 +481,10 @@ public class UGItem {
         if(itemMeta == null) return null;
 
         NamespacedKey powerKey = new NamespacedKey(UnlimitedGrind.getInstance(), "power");
+        NamespacedKey rarityKey = new NamespacedKey(UnlimitedGrind.getInstance(), "rarity");
         PersistentDataContainer persistentDataContainer = itemMeta.getPersistentDataContainer();
-        if(persistentDataContainer.has(powerKey)) {
+        if(persistentDataContainer.has(powerKey) && persistentDataContainer.has(rarityKey)) {
             NamespacedKey passifKey = new NamespacedKey(UnlimitedGrind.getInstance(), "passifIdArray");
-            NamespacedKey rarityKey = new NamespacedKey(UnlimitedGrind.getInstance(), "rarity");
             NamespacedKey artefactkey = new NamespacedKey(UnlimitedGrind.getInstance(), "artifact");
             double power = persistentDataContainer.get(powerKey, PersistentDataType.DOUBLE);
             String rarity = persistentDataContainer.get(rarityKey, PersistentDataType.STRING);

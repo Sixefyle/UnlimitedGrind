@@ -33,6 +33,10 @@
                                     <pattern>com.zaxxer.hikari</pattern>
                                     <shadedPattern>me.mc2.internal.hikari</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>fr.mrmicky.fastboard</pattern>
+                                    <shadedPattern>be.sixefyle.fastboard</shadedPattern>
+                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>
@@ -95,11 +99,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>me.jasperjh</groupId>
-            <artifactId>realscoreboard</artifactId>
-            <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>C:/Users/sixef/OneDrive/Bureau/server/plugins/realscoreboard-plugin-1.0.jar</systemPath>
+            <groupId>fr.mrmicky</groupId>
+            <artifactId>fastboard</artifactId>
+            <version>1.2.1</version>
         </dependency>
         <dependency>
             <groupId>com.github.MilkBowl</groupId>

@@ -6,22 +6,21 @@ import be.sixefyle.arena.pve.PveArena;
 import be.sixefyle.enums.ComponentColor;
 import be.sixefyle.enums.Stats;
 import be.sixefyle.enums.Symbols;
+import be.sixefyle.event.OnUgPlayerDieEvent;
 import be.sixefyle.exception.PlayerNotExist;
 import be.sixefyle.group.Group;
 import be.sixefyle.items.*;
 import be.sixefyle.utils.NumberUtils;
-import com.iridium.iridiumskyblock.IridiumSkyblock;
 import com.iridium.iridiumskyblock.api.IridiumSkyblockAPI;
 import com.iridium.iridiumskyblock.database.Island;
-import josegamerpt.realscoreboard.api.RealScoreboardAPI;
-import josegamerpt.realscoreboard.api.scoreboard.RScoreboard;
+import fr.mrmicky.fastboard.FastBoard;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -46,13 +45,13 @@ public class UGPlayer {
         activesPotionsMap.forEach((potionEffectType, bukkitTask) -> {
             bukkitTask.cancel();
         });
-        leavePveArena();
+        leaveArena();
         leaveGroup();
     }
 
     private Player player;
     private UGIsland ugIsland;
-    private RScoreboard scoreboard;
+    private FastBoard scoreboard;
     private BaseArena arena;
     private Group group;
     private BukkitTask actionBarTask;
@@ -71,43 +70,49 @@ public class UGPlayer {
     private final HashMap<Stats, Double> statsMap = new HashMap<>();
 
     public UGPlayer(Player player) {
-        if(playerMap.containsKey(player.getUniqueId())) return;
-        this.player = player;
+        try{
+            if(playerMap.containsKey(player.getUniqueId())) return;
+            this.player = player;
 
-        Optional<Island> island = IridiumSkyblockAPI.getInstance().getUser(player).getIsland();
-        if(island.isPresent()) {
-            ugIsland = new UGIsland(island);
+            Optional<Island> island = IridiumSkyblockAPI.getInstance().getUser(player).getIsland();
+            if(island.isPresent()) {
+                ugIsland = new UGIsland(island);
+            }
+
+            try {
+                getPlayerData();
+            } catch (PlayerNotExist e) {
+                wearedPower = 1;
+                maxPower = 1;
+                level = 1;
+                experience = 0;
+                isHealthLocked = false;
+
+                statsMap.put(Stats.CRITICAL_CHANCE, 0.05);
+                statsMap.put(Stats.CRITICAL_DAMAGE, 1.4);
+                statsMap.put(Stats.LIFE_STEAL, 0.0);
+                statsMap.put(Stats.HEALTH, baseHealth);
+                statsMap.put(Stats.ARMOR, 0.0);
+                statsMap.put(Stats.STRENGTH, 0.0);
+                statsMap.put(Stats.VITALITY, 0.0);
+                statsMap.put(Stats.SWEEPING_RANGE, 1.0);
+                statsMap.put(Stats.SWEEPING_DAMAGE, 1.0);
+                statsMap.put(Stats.MELEE_DAMAGE_REDUCTION, 1.0);
+                statsMap.put(Stats.RANGE_DAMAGE_REDUCTION, 1.0);
+                statsMap.put(Stats.BONUS_CRITICAL_CHANCE, 0.0);
+                statsMap.put(Stats.BONUS_CRITICAL_DAMAGE, 0.0);
+            }
+            isConnecting = true;
+
+            initScoreboard();
+            updateScoreboardLine();
+            startActionBarRefresh();
+            playerMap.putIfAbsent(player.getUniqueId(), this);
+        } catch (Exception e){
+            player.kick(Component.text("An error occurred on loading player info, please try again")
+                    .color(ComponentColor.ERROR.getColor()));
+            e.printStackTrace();
         }
-
-        try {
-            getPlayerData();
-        } catch (PlayerNotExist e) {
-            wearedPower = 1;
-            maxPower = 1;
-            level = 1;
-            experience = 0;
-            isHealthLocked = false;
-
-            statsMap.put(Stats.CRITICAL_CHANCE, 0.05);
-            statsMap.put(Stats.CRITICAL_DAMAGE, 1.4);
-            statsMap.put(Stats.LIFE_STEAL, 0.0);
-            statsMap.put(Stats.HEALTH, baseHealth);
-            statsMap.put(Stats.ARMOR, 0.0);
-            statsMap.put(Stats.STRENGTH, 0.0);
-            statsMap.put(Stats.VITALITY, 0.0);
-            statsMap.put(Stats.SWEEPING_RANGE, 1.0);
-            statsMap.put(Stats.SWEEPING_DAMAGE, 1.0);
-            statsMap.put(Stats.MELEE_DAMAGE_REDUCTION, 1.0);
-            statsMap.put(Stats.RANGE_DAMAGE_REDUCTION, 1.0);
-            statsMap.put(Stats.BONUS_CRITICAL_CHANCE, 0.0);
-            statsMap.put(Stats.BONUS_CRITICAL_DAMAGE, 0.0);
-        }
-        isConnecting = true;
-
-        initScoreboard();
-        updateScoreboardLine();
-        startActionBarRefresh();
-        playerMap.putIfAbsent(player.getUniqueId(), this);
     }
 
     public void initScoreboard(){
@@ -116,55 +121,54 @@ public class UGPlayer {
             island = ugIsland.getIsland().get();
         }
 
-        scoreboard = RealScoreboardAPI.getInstance().getScoreboardManager().getScoreboard(player);
-        scoreboard.getLines().clear();
+        scoreboard = new FastBoard(player);
+        scoreboard.updateTitle("test");
 
         Island finalIsland = island;
         List<String> lines = new ArrayList<>() {{
             if(finalIsland != null){
-                add("         #{f79f07}&l⭐#{f0aa32} Rank " + finalIsland.getRank() + " #{f79f07}&l⭐");
+                add(ChatColor.of("#f79f07") +"         §l⭐"+ ChatColor.of("#f0aa32") +" Rank " + finalIsland.getRank() + ChatColor.of("#f79f07") + " §l⭐");
                 add("");
             }
-            add("#{e23f22}" + Symbols.PLAYER.get() + "#{e25822} Player Informations:" );
-            add("  #{e23f22}▸#{E6EED6} Items Power &c" + NumberUtils.format(wearedPower) + Symbols.POWER.get());
-            add("  #{e23f22}▸#{E6EED6} Max Power &c" + NumberUtils.format(maxPower) + Symbols.POWER.get());
-            add("  #{e23f22}▸#{E6EED6} Money &e" + NumberUtils.format(UnlimitedGrind.getEconomy().getBalance(player)) + Symbols.COIN.get());
+            add(ChatColor.of("#e23f22") + Symbols.PLAYER.get() + ChatColor.of("#e25822") + " Player Informations:" );
+            add(ChatColor.of("#e23f22") + "  ▸"+ ChatColor.of("#E6EED6") + " Items Power §c" + NumberUtils.format(wearedPower) + Symbols.POWER.get());
+            add(ChatColor.of("#e23f22") + "  ▸"+ ChatColor.of("#E6EED6") + " Max Power §c" + NumberUtils.format(maxPower) + Symbols.POWER.get());
+            add(ChatColor.of("#e23f22") + "  ▸"+ ChatColor.of("#E6EED6") + " Money §e" + NumberUtils.format(UnlimitedGrind.getEconomy().getBalance(player)) + Symbols.COIN.get());
             add("");
             if(finalIsland != null){
-                add("#{48bff0}" + Symbols.ISLAND.get() + "#{87CEEB} Island Informations:");
-                add("  #{48bff0}▸#{E4F0D0} Value - " + NumberUtils.format(finalIsland.getValue()));
-                add("  #{48bff0}▸#{E4F0D0} Level - " + NumberUtils.format(finalIsland.getLevel()));
-                add("  #{48bff0}▸#{E4F0D0} Bank");
-                add("    #{48bff0}▹#{E4F0D0} Money - " + finalIsland.getMoney());
-                add("    #{48bff0}▹#{E4F0D0} Crystals - " + finalIsland.getCrystals());
+                add(ChatColor.of("#48bff0") + Symbols.ISLAND.get() + ChatColor.of("#87CEEB") + " Island Informations:");
+                add(ChatColor.of("#48bff0") + "  ▸" + ChatColor.of("#E4F0D0") + " Value - " + NumberUtils.format(finalIsland.getValue()));
+                add(ChatColor.of("#48bff0") + "  ▸" + ChatColor.of("#E4F0D0") + " Level - " + NumberUtils.format(finalIsland.getLevel()));
+                add(ChatColor.of("#48bff0") + "  ▸" + ChatColor.of("#E4F0D0") + " Bank");
+                add(ChatColor.of("#48bff0") + "    ▹" + ChatColor.of("#E4F0D0") + " Money - " + finalIsland.getMoney());
+                add(ChatColor.of("#48bff0") + "    ▹" + ChatColor.of("#E4F0D0") + " Crystals - " + finalIsland.getCrystals());
             } else {
-                add(" #{48bff0}▸#{E4F0D0} Do #{48bff0}/is create#{E4F0D0} to start your journey! #{48bff0}◂");
+                add(ChatColor.of("#48bff0") + " ▸" + ChatColor.of("#E4F0D0") + " Do " + ChatColor.of("#48bff0") + "/is create" + ChatColor.of("#E4F0D0") + " to start your journey! " + ChatColor.of("#48bff0") + "◂");
             }
         }};
 
-        scoreboard.getLines().addAll(lines);
+        scoreboard.updateLines(lines);
     }
 
     public void updateScoreboardLine(){
-        IridiumSkyblock.getInstance().registerListeners();
         scoreboardTask = Bukkit.getScheduler().runTaskTimer(UnlimitedGrind.getInstance(), () -> {
             updateScoreboardPower();
             if(ugIsland != null && ugIsland.getIsland().isPresent()){
                 Island island = ugIsland.getIsland().get();
-                scoreboard.getLines().set(0, "         #{f79f07}&l⭐#{f0aa32} Rank " + island.getRank() + " #{f79f07}&l⭐");
-                scoreboard.getLines().set(8, "  #{48bff0}▸#{E4F0D0} Value - " + NumberUtils.format(island.getValue()));
-                scoreboard.getLines().set(9, "  #{48bff0}▸#{E4F0D0} Level - " + NumberUtils.format(island.getLevel()));
-                scoreboard.getLines().set(11, "    #{48bff0}▹#{E4F0D0} Money - " + island.getMoney() + Symbols.COIN.get());
-                scoreboard.getLines().set(12, "    #{48bff0}▹#{E4F0D0} Crystals - " + island.getCrystals() + Symbols.CRYSTALS.get());
+                scoreboard.updateLine(0, ChatColor.of("#f79f07") +"         §l⭐"+ ChatColor.of("#f0aa32") +" Rank " + island.getRank() + ChatColor.of("#f79f07") + " §l⭐");
+                scoreboard.updateLine(8, ChatColor.of("#48bff0") + "  ▸" + ChatColor.of("#E4F0D0") + " Value - " + NumberUtils.format(island.getValue()));
+                scoreboard.updateLine(9, ChatColor.of("#48bff0") + "  ▸" + ChatColor.of("#E4F0D0") + " Level - " + NumberUtils.format(island.getLevel()));
+                scoreboard.updateLine(11, ChatColor.of("#48bff0") + "    ▹" + ChatColor.of("#E4F0D0") + " Money - " + island.getMoney());
+                scoreboard.updateLine(12, ChatColor.of("#48bff0") + "    ▹" + ChatColor.of("#E4F0D0") + " Crystals - " + island.getCrystals());
             }
-            scoreboard.getLines().set(ugIsland == null ? 3 : 5, "  #{e23f22}▸#{E6EED6} Money &e" + NumberUtils.format(UnlimitedGrind.getEconomy().getBalance(player)) + Symbols.COIN.get());
+            scoreboard.updateLine(ugIsland == null ? 3 : 5, ChatColor.of("#e23f22") + "  ▸"+ ChatColor.of("#E6EED6") + " Money §e" + NumberUtils.format(UnlimitedGrind.getEconomy().getBalance(player)) + Symbols.COIN.get());
         }, 100, 100);
     }
 
     public void updateScoreboardPower(){
         int index = ugIsland == null ? 1 : 3;
-        scoreboard.getLines().set(index++, "  #{e23f22}▸#{E6EED6} Items Power &c" + NumberUtils.format(wearedPower) + Symbols.POWER.get());
-        scoreboard.getLines().set(index, "  #{e23f22}▸#{E6EED6} Max Power &c" + NumberUtils.format(maxPower) + Symbols.POWER.get());
+        scoreboard.updateLine(index++, ChatColor.of("#e23f22") + "  ▸"+ ChatColor.of("#E6EED6") + " Items Power §c" + NumberUtils.format(getWearedPower()) + Symbols.POWER.get());
+        scoreboard.updateLine(index, ChatColor.of("#e23f22") + "  ▸"+ ChatColor.of("#E6EED6") + " Items Power §c" + NumberUtils.format(getMaxPower()) + Symbols.POWER.get());
     }
 
     public void updateActionBarStats(){
@@ -246,15 +250,15 @@ public class UGPlayer {
         updateScoreboardPower();
     }
 
-    public void updateWearedPower(UGItem newItem, UGItem oldItem){
-        if(newItem != null){
-            addPower(newItem.getPower() / getEquippedItems().size());
+    public void updateWearedPower(UGItem newItem, UGItem oldItem, ItemAction action){
+        if(ItemAction.shouldAffectStats(newItem, action)){
+            addPower(newItem.getPower() / 6);
             if(getWearedPower() > getMaxPower()){
                 setMaxPower(getWearedPower());
             }
         }
-        if(oldItem != null){
-            addPower(-(oldItem.getPower() / getEquippedItems().size()));
+        if(ItemAction.shouldAffectStats(oldItem, action)){
+            addPower(-(oldItem.getPower() / 6));
         }
         updateScoreboardPower();
     }
@@ -389,8 +393,9 @@ public class UGPlayer {
 
     public void kill(){
         setHealth(getMaxHealth());
-        Bukkit.getServer().getPluginManager().callEvent(new PlayerDeathEvent(player, new ArrayList<>(), 0, 0, ""));
-        respawn();
+        player.getActivePotionEffects().clear();
+        player.setFireTicks(0);
+        Bukkit.getServer().getPluginManager().callEvent(new OnUgPlayerDieEvent(this, null, player.getLocation()));
     }
 
     public void respawn(){
@@ -437,6 +442,10 @@ public class UGPlayer {
     public boolean leaveGroup(){
         if(group == null) return false;
 
+        if(isInArena()){
+            leaveArena();
+        }
+
         group.removePlayer(this);
         group = null;
         return true;
@@ -444,14 +453,25 @@ public class UGPlayer {
 
     public List<ItemStack> getArmorAndOffHand(){
         List<ItemStack> armor = new ArrayList<>(Arrays.asList(player.getInventory().getArmorContents()));
-        armor.add(player.getInventory().getItemInOffHand());
 
+        ItemStack handItem = player.getInventory().getItemInMainHand();
+        UGItem ugItem = UGItem.getFromItemStack(handItem);
+        if(ugItem != null && ugItem.getItemCategories().equals(ItemCategory.SHIELD) && canEquipItem(ugItem)){
+            armor.add(player.getInventory().getItemInMainHand());
+        }
+
+        armor.add(player.getInventory().getItemInOffHand());
         return armor;
     }
 
     public List<ItemStack> getEquippedItems(){
         List<ItemStack> items = getArmorAndOffHand();
-        items.add(player.getInventory().getItemInMainHand());
+
+        ItemStack handItem = player.getInventory().getItemInMainHand();
+        UGItem ugItem = UGItem.getFromItemStack(handItem);
+        if(ugItem != null && !ugItem.getItemCategories().equals(ItemCategory.ARMOR) && canEquipItem(ugItem)){
+            items.add(player.getInventory().getItemInMainHand());
+        }
         return items;
     }
 
@@ -497,7 +517,7 @@ public class UGPlayer {
                 }
             });
         }
-        if(ItemAction.shouldAffectStats(oldItem, action)){
+        if(ItemAction.shouldAffectStats(oldItem, action) && canEquipItem(oldItem)){
             oldItem.getStatsMap().forEach((stat, value) -> {
                 if(statsMap.containsKey(stat)){
                     addStatValue(stat, -value);
@@ -508,7 +528,8 @@ public class UGPlayer {
     }
 
     public double getStatValue(Stats stat) {
-        return Math.round(statsMap.get(stat));
+        double value = statsMap.get(stat);
+        return value >= 1 ? Math.round(statsMap.get(stat)) : value;
     }
 
     public void setStatValue(Stats stat, double value) {
@@ -521,20 +542,30 @@ public class UGPlayer {
         }
     }
 
-    public void joinPveArena(ArenaMap arena, double power){
+    public void joinArena(ArenaMap arenaMap, double power){
+        if(hasGroup() && !getGroup().getOwner().equals(this)) return;
+        if(isInArena()) return;
+
         if(hasGroup()){
-            this.arena = new PveArena(getGroup(), arena);
+            this.arena = new PveArena(getGroup(), arenaMap);
         } else {
-            this.arena = new PveArena(this, arena);
+            this.arena = new PveArena(this, arenaMap);
         }
-        this.arena.join(power);
+        this.arena.setupArena(power);
         shouldAllowArmorChange(false);
         player.setGameMode(GameMode.ADVENTURE);
     }
 
+    public void setArena(BaseArena arena) {
+        this.arena = arena;
+    }
 
-    public void leavePveArena(){
-        this.arena = null;
+    public void leaveArena(){
+        if(!isInArena()) return;
+
+        PveArena pveArena = (PveArena) arena;
+        pveArena.quit(this);
+
         shouldAllowArmorChange(true);
         player.setGameMode(GameMode.SURVIVAL);
         respawn();

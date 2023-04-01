@@ -15,17 +15,23 @@ public enum ArenaMap {
                     new Location(null, -40, 81, 87),
                     new Location(null, -79, 80, 101)
             ),
-            List.of(new Location(null, -78, 79, 53))),
+            List.of(new Location(null, -78, 79, 53)), 10, 50, 7),
     ;
 
-    private String schematicName;
-    private List<Location> creatureSpawnLocs;
-    private List<Location> playerSpawnLocs;
+    private final String schematicName;
+    private final List<Location> creatureSpawnLocs;
+    private final List<Location> playerSpawnLocs;
+    private final int minCreature;
+    private final int maxCreature;
+    private final int creatureToAddPerBossWave;
 
-    ArenaMap(String schematicName, List<Location> creatureSpawnLocs, List<Location> playerSpawnLocs) {
+    ArenaMap(String schematicName, List<Location> creatureSpawnLocs, List<Location> playerSpawnLocs, int minCreature, int maxCreature, int creatureToAddPerWave) {
         this.schematicName = schematicName;
         this.creatureSpawnLocs = creatureSpawnLocs;
         this.playerSpawnLocs = playerSpawnLocs;
+        this.minCreature = minCreature;
+        this.maxCreature = maxCreature;
+        this.creatureToAddPerBossWave = creatureToAddPerWave;
     }
 
     public String getSchematicName() {
@@ -38,5 +44,17 @@ public enum ArenaMap {
 
     public List<Location> getPlayerSpawnLocs() {
         return playerSpawnLocs;
+    }
+
+    public int getMinCreature() {
+        return minCreature;
+    }
+
+    public int getMaxCreature() {
+        return maxCreature;
+    }
+
+    public int getCreatureToAddPerBossWave() {
+        return creatureToAddPerBossWave;
     }
 }

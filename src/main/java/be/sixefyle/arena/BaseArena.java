@@ -1,22 +1,49 @@
 package be.sixefyle.arena;
 
+import be.sixefyle.UGPlayer;
+import org.bukkit.Location;
+
+import java.util.List;
 import java.util.UUID;
 
 public abstract class BaseArena {
 
-    private ArenaMap arena;
+    private final ArenaMap arenaMap;
+    private final List<Location> creatureSpawnLocations;
+    private final List<Location> playerSpawnLocations;
+    private final UGPlayer owner;
+    private final UUID worldUUID;
 
-    public BaseArena(ArenaMap arena) {
-        this.arena = arena;
+    public BaseArena(ArenaMap arenaMap, List<Location> creatureSpawnLocations, List<Location> playerSpawnLocations, UGPlayer owner, UUID worldUUID) {
+        this.arenaMap = arenaMap;
+        this.creatureSpawnLocations = creatureSpawnLocations;
+        this.playerSpawnLocations = playerSpawnLocations;
+        this.owner = owner;
+        this.worldUUID = worldUUID;
     }
 
-    public ArenaMap getArena() {
-        return arena;
+    public abstract void setupArena(double power);
+
+    public String getWorldName(){
+        return "arena_" + getWorldUUID();
+    }
+    public ArenaMap getArenaMap() {
+        return arenaMap;
     }
 
-    public abstract void join(double power);
+    public List<Location> getCreatureSpawnLocations() {
+        return creatureSpawnLocations;
+    }
 
-    public abstract UUID getWorldUUID();
+    public List<Location> getPlayerSpawnLocations() {
+        return playerSpawnLocations;
+    }
 
-    public abstract String getWorldName();
+    public UGPlayer getOwner() {
+        return owner;
+    }
+
+    public UUID getWorldUUID() {
+        return worldUUID;
+    }
 }

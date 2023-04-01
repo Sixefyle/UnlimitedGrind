@@ -2,6 +2,7 @@ package be.sixefyle.arena.pve;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
+import be.sixefyle.group.Group;
 import be.sixefyle.utils.HologramUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -15,17 +16,18 @@ import java.util.List;
 public class Wave {
 
     private int creatureToSpawn;
-    private List<Location> spawnLocs;
-    private List<Damageable> aliveCreatures;
-    private World world;
-    private List<UGPlayer> players;
+    private int totalWaveCreatureAmount;
+    private final List<Location> spawnLocs;
+    private final List<Damageable> aliveCreatures;
+    private final World world;
+    private final Group group;
 
-    public Wave(int creatureToSpawn, List<Location> spawnLocs, World world, List<UGPlayer> players) {
+    public Wave(int creatureToSpawn, List<Location> spawnLocs, World world, Group group) {
         this.creatureToSpawn = creatureToSpawn;
         this.spawnLocs = spawnLocs;
         this.aliveCreatures = new ArrayList<>();
         this.world = world;
-        this.players = players;
+        this.group = group;
     }
 
     public void setCreatureToSpawnAmount(int creatureToSpawn) {
@@ -33,7 +35,7 @@ public class Wave {
     }
 
     public boolean isEnd(){
-        return aliveCreatures.size() <= 2;
+        return aliveCreatures.size() <= creatureToSpawn * .4;
     }
 
     public void end(){
@@ -48,13 +50,18 @@ public class Wave {
         int random;
         CreatureType[] creatureTypes = CreatureType.values();
         Damageable currentEntity;
-        UGPlayer nearestPlayer = players.get(0);
+        UGPlayer nearestPlayer = group.getOwner();
         double nearestDistance = 9999;
         double distance;
+
         for (int i = 0; i < creatureToSpawn; i++) {
             locToSpawn = spawnLocs.get((int) (Math.random() * spawnLocs.size()));
             locToSpawn.setWorld(world);
-            for (UGPlayer player : players) {
+            for (UGPlayer player : group.getMembers()) {
+                if(!world.equals(player.getPlayer().getWorld())) {
+                    continue;
+                }
+
                 distance = player.getPlayer().getLocation().distance(locToSpawn);
                 if(distance < nearestDistance){
                     nearestDistance = distance;
@@ -94,6 +101,8 @@ public class Wave {
 
             aliveCreatures.add(currentEntity);
         }
+
+        totalWaveCreatureAmount = aliveCreatures.size();
     }
 
     public void spawnBoss(){
@@ -101,7 +110,7 @@ public class Wave {
     }
 
     public void addGlowToEntity(Entity entity, ChatColor color){
-        for (UGPlayer ugPlayer : players) {
+        for (UGPlayer ugPlayer : group.getMembers()) {
             try {
                 UnlimitedGrind.getGlowingEntities().setGlowing(entity, ugPlayer.getPlayer(), color);
             } catch (ReflectiveOperationException e) {
@@ -112,5 +121,9 @@ public class Wave {
 
     public List<Damageable> getAliveCreatures() {
         return aliveCreatures;
+    }
+
+    public int getTotalWaveCreatureAmount() {
+        return totalWaveCreatureAmount;
     }
 }

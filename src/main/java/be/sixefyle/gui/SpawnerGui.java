@@ -3,7 +3,7 @@ package be.sixefyle.gui;
 import be.sixefyle.UGSpawner;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.utils.PlaceholderUtils;
-import com.iridium.iridiumcolorapi.IridiumColorAPI;
+import com.iridium.iridiumcore.dependencies.iridiumcolorapi.IridiumColorAPI;
 import com.iridium.iridiumcore.dependencies.xseries.XMaterial;
 import com.iridium.iridiumcore.utils.InventoryUtils;
 import com.iridium.iridiumskyblock.IridiumSkyblock;

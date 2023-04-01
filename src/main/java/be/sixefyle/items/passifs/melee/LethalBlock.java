@@ -12,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
@@ -66,7 +67,11 @@ public class LethalBlock extends ItemPassif implements OnReceiveDamage, Stackabl
                     player.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, player.getLocation(), 1);
                     nbtArmor = new NBTItem(armor);
                     damage = nbtArmor.getDouble(damageBlockedNBTKey);
-                    for (LivingEntity nearbyLivingEntity : player.getLocation().getNearbyLivingEntities(3)) {
+                    List<LivingEntity> livingEntityList = player.getLocation().getNearbyLivingEntities(3)
+                            .stream()
+                            .filter(ent -> ent instanceof Monster)
+                            .toList();
+                    for (LivingEntity nearbyLivingEntity : livingEntityList) {
                         if(nearbyLivingEntity.equals(player)) continue;
                         nearbyLivingEntity.damage(damage);
                         HologramUtils.createDamageIndicator(nearbyLivingEntity.getLocation(), NumberUtils.format(damage), ChatColor.AQUA);
@@ -95,7 +100,7 @@ public class LethalBlock extends ItemPassif implements OnReceiveDamage, Stackabl
         if(!nbtArmor.hasKey(damageBlockedNBTKey)) {
             resetStack(nbtArmor);
         }
-        addStack(nbtArmor, e.getDamage() * getStrength());
+        addStack(nbtArmor, e.getFinalDamage() * getStrength());
         checkIfPlayerBlock(player, armor);
         nbtArmor.applyNBT(armor);
     }

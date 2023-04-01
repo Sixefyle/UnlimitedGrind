@@ -1,6 +1,7 @@
 package be.sixefyle.items.passifs.armor;
 
 import be.sixefyle.UnlimitedGrind;
+import be.sixefyle.items.UGItem;
 import be.sixefyle.items.passifs.ItemPassif;
 import be.sixefyle.items.passifs.interfaces.OnReceiveDamage;
 import org.bukkit.entity.Player;
@@ -18,6 +19,6 @@ public class DamageReductionPassif extends ItemPassif implements OnReceiveDamage
 
     @Override
     public void onGetDamage(EntityDamageEvent e, Player player, ItemStack armor) {
-        e.setDamage(e.getDamage() / (getStrength()+1));
+        e.setDamage(e.getFinalDamage() * (1 - (getStrength() + getMythicBonus(UGItem.isMythic(armor)))));
     }
 }

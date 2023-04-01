@@ -2,12 +2,14 @@ package be.sixefyle.arena.pve;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
+import be.sixefyle.event.OnUgPlayerDieEvent;
 import be.sixefyle.items.ItemManager;
 import be.sixefyle.items.UGItem;
 import org.bukkit.GameMode;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -22,12 +24,15 @@ public class PveArenaListener implements Listener {
             arenaManager.getWave().getAliveCreatures().remove(entity);
             e.getDrops().clear();
 
+            arenaManager.updateBossBar();
+
             FileConfiguration config = UnlimitedGrind.getInstance().getConfig();
             double rareDropChance = config.getDouble("pve.arena.rareDropChance") +
                     (config.getDouble("pve.arena.perWaveRareDropChanceIncrease") * entity.getMetadata("wave").get(0).asInt());
+            rareDropChance = Math.max(rareDropChance, .25);
 
             if(Math.random() <= rareDropChance){
-                UGItem rareItem = ItemManager.generateRandomItem(entity.getMetadata("power").get(0).asDouble());
+                UGItem rareItem = ItemManager.generateRandomItem(arenaManager.getArenaPower());
 
                 Item item = entity.getWorld().dropItemNaturally(entity.getLocation(), rareItem.asItemStack());
                 rareItem.createRarityParticle(item);
@@ -36,17 +41,14 @@ public class PveArenaListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerDie(PlayerDeathEvent e){
-        Player player = e.getPlayer();
-        if(player.hasMetadata("arenaWorld")){
+    public void onPlayerDie(OnUgPlayerDieEvent e){
+        UGPlayer ugPlayer = e.getUgPlayer();
+        Player player = ugPlayer.getPlayer();
+        if(ugPlayer.isInArena()){
             e.setCancelled(true);
-            //UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
             ArenaManager arenaManager = ArenaManager.getArenaManagers().get(player.getWorld());
-            //arenaManager.getUgPlayers().remove(ugPlayer);
             arenaManager.reducePlayerAlive();
             player.setGameMode(GameMode.SPECTATOR);
-            //player.spigot().respawn();
-            //ugPlayer.leavePveArena();
 
             if(arenaManager.getPlayerAlive() <= 0){
                 arenaManager.stopGame();
@@ -80,14 +82,16 @@ public class PveArenaListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerQuit(PlayerQuitEvent e){
         Player player = e.getPlayer();
-        if(player.hasMetadata("arenaWorld")) {
+        UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+        if(ugPlayer == null) return;
+
+        if(ugPlayer.isInArena()) {
             ArenaManager arenaManager = ArenaManager.getArenaManagers().get(player.getWorld());
             if(arenaManager != null){
                 arenaManager.reducePlayerAlive();
-                arenaManager.getParticipants().remove(UGPlayer.GetUGPlayer(player));
 
                 if(arenaManager.getPlayerAlive() <= 0){
                     arenaManager.stopGame();

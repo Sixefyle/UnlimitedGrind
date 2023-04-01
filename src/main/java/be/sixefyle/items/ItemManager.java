@@ -31,7 +31,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class ItemManager implements Listener {
 
@@ -50,6 +52,15 @@ public class ItemManager implements Listener {
     }
 
     public static UGItem generateItem(double power, DropTable dropTable, Rarity rarity){
+        double minPower = Math.min(power - (power % MAX_OFFSET_POWER), MAX_POWER - MAX_OFFSET_POWER);
+        double maxPower = Math.min(minPower + MAX_OFFSET_POWER, MAX_POWER);
+
+        switch (rarity){
+            case LEGENDARY -> maxPower += MAX_OFFSET_POWER / 2.0;
+            case MYTHIC -> maxPower += MAX_OFFSET_POWER;
+        }
+        double itemPower = NumberUtils.getRandomNumber(minPower, maxPower);
+
         List<Passif> itemPassifList = new ArrayList<>();
         String itemPrefix = null;
         if(rarity.equals(Rarity.LEGENDARY) || rarity.equals(Rarity.MYTHIC)){
@@ -64,29 +75,23 @@ public class ItemManager implements Listener {
             itemPassifList.add(passif);
         }
 
-        return new UGItem(dropTable.getMaterial(), rarity, null, itemPrefix, null, null, power, itemPassifList);
+        return new UGItem(dropTable.getMaterial(), rarity, null, itemPrefix, null, null, itemPower, itemPassifList);
     }
 
     public static UGItem generateRandomItem(ItemCategory itemCategory, double power, Rarity rarity){
-        double minPower = Math.min(power - (power % MAX_OFFSET_POWER), MAX_POWER - MAX_OFFSET_POWER);
-        double maxPower = Math.min(minPower + MAX_OFFSET_POWER, MAX_POWER);
+        DropTable[] dropTables = DropTable.values();
+        DropTable[] lootableItems = Arrays.stream(dropTables)
+                .filter(DropTable::canBeLoot)
+                .filter(dt -> dt.getItemCategory().equals(itemCategory))
+                .toArray(DropTable[]::new);
 
-        switch (rarity){
-            case LEGENDARY -> maxPower += MAX_OFFSET_POWER / 2.0;
-            case MYTHIC -> maxPower += MAX_OFFSET_POWER;
+        DropTable itemType;
+        if (lootableItems.length > 0) {
+            itemType = lootableItems[ThreadLocalRandom.current().nextInt(lootableItems.length)];
+        } else {
+            itemType = DropTable.WOODEN_SWORD;
         }
-        double itemPower = NumberUtils.getRandomNumber(minPower, maxPower);
-
-        DropTable itemType = DropTable.values()[(int) (Math.random() * DropTable.values().length)];
-        while (!itemType.canBeLoot()){
-            itemType = DropTable.values()[(int) (Math.random() * DropTable.values().length)];
-        }
-        ItemCategory currentItemCategory = itemType.getItemCategory();
-        while(!currentItemCategory.equals(itemCategory)){
-            itemType = DropTable.values()[(int) (Math.random() * DropTable.values().length)];
-            currentItemCategory = itemType.getItemCategory();
-        }
-        return generateItem(itemPower, itemType, rarity);
+        return generateItem(power, itemType, rarity);
     }
 
     public static UGItem generateRandomItem(ItemCategory itemCategory, double power){
@@ -225,19 +230,6 @@ public class ItemManager implements Listener {
             e.setCurrentItem(ugItem.asItemStack());
         }catch (IllegalArgumentException ignore){}
     }
-
-//    @EventHandler
-//    public void onClickOnSmithing(InventoryClickEvent e){
-//        Inventory clickedInventory = e.getClickedInventory();
-//        if(clickedInventory == null) return;
-//
-//        if(clickedInventory.getType().equals(InventoryType.SMITHING)){
-//            ItemStack resultItem = clickedInventory.getItem(2);
-//            if(resultItem == null) return;
-//
-//            Bukkit.getPluginManager().callEvent(new OnSmithingCraftEvent(resultItem, e.getViewers(), e.getAction()));
-//        }
-//    }
 
     @EventHandler
     public void onSmithingCraft(SmithItemEvent e){

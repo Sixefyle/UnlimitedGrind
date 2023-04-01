@@ -4,12 +4,18 @@ import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.enums.Effects;
 import be.sixefyle.enums.Symbols;
+import be.sixefyle.event.OnPostDamageEvent;
+import be.sixefyle.event.OnUgPlayerDieEvent;
+import be.sixefyle.items.ItemManager;
+import be.sixefyle.items.ItemRepairTable;
 import be.sixefyle.items.UGItem;
 import be.sixefyle.utils.NumberUtils;
 import be.sixefyle.utils.HologramUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Damageable;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,62 +23,40 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
+import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 
 public class CombatListener implements Listener {
-    private final double powerEfficiency = UnlimitedGrind.getInstance().getConfig().getDouble("power.efficiencyDamage");
+    @EventHandler
+    public void onPlayerAttack(OnPostDamageEvent e){
+        if(e.getDamage() <= 0) return;
 
-//    @EventHandler //TODO: Passif sur les item débloqué avec le power
-//    public void onPlayerAttack(EntityDamageByEntityEvent e){
-//        if(e.getDamager() instanceof Player player){
-//            UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
-//
-//            double newDamage = e.getFinalDamage() + (e.getFinalDamage() * powerEfficiency * ugPlayer.getPower());
-//
-//            e.setDamage(newDamage);
-//        }
-//    }
+        Damageable damaged = (Damageable) e.getTarget();
+        damaged.damage(e.getDamage());
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerAttack(EntityDamageByEntityEvent e){
-        // If item is broke
-        if(e.getDamager() instanceof Player player){
-            ItemStack item = player.getInventory().getItemInMainHand();
-            if(item.getItemMeta() != null){
-                int itemDamage = ((org.bukkit.inventory.meta.Damageable)item.getItemMeta()).getDamage();
-                if(itemDamage + 1 >= item.getType().getMaxDurability()){
-                    e.setDamage(1);
-                }
-            }
-            UGItem ugItem = UGItem.getFromItemStack(item);
-            if(ugItem != null){
-                UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
-                if(!ugPlayer.canEquipItem(ugItem)){
-                    e.setDamage(1);
-                }
-            }
-        }
-        if(e.getFinalDamage() <= 0) return;
-
-        Location damageIndicatorLoc = e.getEntity().getLocation().clone();
+        Location damageIndicatorLoc = e.getTarget().getLocation().clone();
 
         ChatColor color = ChatColor.WHITE;
-        if(e.getDamager() instanceof Player)
-            color = e.isCritical() ? ChatColor.GOLD : ChatColor.WHITE;
-        if(e.getEntity() instanceof Player)
+        if(e.getAttacker() instanceof Player)
+            color = e.isCrit() ? ChatColor.GOLD : ChatColor.WHITE;
+        if(e.getTarget() instanceof Player)
             color = ChatColor.RED;
 
-        HologramUtils.createDamageIndicator(damageIndicatorLoc, (e.isCritical() ? ChatColor.BOLD + Symbols.CRITICS.get() : "") +
-                NumberUtils.format(e.getFinalDamage()), color);
+        HologramUtils.createDamageIndicator(damageIndicatorLoc, (e.isCrit() ? ChatColor.BOLD + Symbols.CRITICS.get() : "") +
+                NumberUtils.format(e.getDamage()), color);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onEntityAttack(EntityDamageByEntityEvent e){
+        if(e.isCancelled()) return;
+
         if(e.getDamager() instanceof Damageable ent && ent.hasMetadata("power")) {
             double power = ent.getMetadata("power").get(0).asDouble();
-            double newDamage = e.getDamage() + e.getDamage() * (power/80 + 1);
+            double newDamage = e.getFinalDamage() + e.getFinalDamage() * (power/80 + 1);
 
             e.setDamage(newDamage);
         }
@@ -80,6 +64,8 @@ public class CombatListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerTakeDamageByEntity(EntityDamageByEntityEvent e){
+        if(e.isCancelled()) return;
+
         if(e.getEntity() instanceof Player player){
             UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
             double damage = e.getDamage() * ugPlayer.getDamageReductionPercentage();
@@ -90,6 +76,8 @@ public class CombatListener implements Listener {
 
     @EventHandler
     public void onPlayerTakeDamage(EntityDamageEvent e){
+        if(e.isCancelled()) return;
+
         if(e.getEntity() instanceof Player player){
             UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
             EntityDamageEvent.DamageCause cause = e.getCause();
@@ -100,7 +88,7 @@ public class CombatListener implements Listener {
             }
 
             if(!cause.equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)){
-                ugPlayer.takeDamage(e.getDamage());
+                ugPlayer.takeDamage(e.getFinalDamage());
                 e.setDamage(0);
             }
             ugPlayer.updateActionBarStats();
@@ -118,7 +106,39 @@ public class CombatListener implements Listener {
                     entity.getWorld().dropItemNaturally(entity.getLocation(), drop);
                 }
             }
+            if(Math.random() <= .1){//TODO: add this to config
+                UGItem rareItem = ItemManager.generateRandomItem(entity.getMetadata("power").get(0).asDouble());
+
+                Item item = entity.getWorld().dropItemNaturally(entity.getLocation(), rareItem.asItemStack());
+                rareItem.createRarityParticle(item);
+            }
             entity.setMetadata("amount", new FixedMetadataValue(UnlimitedGrind.getInstance(), amount - 1));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerDie(OnUgPlayerDieEvent e){
+        if(e.isCancelled()) return;
+
+        e.getUgPlayer().respawn();
+    }
+
+    @EventHandler
+    public void reduceDurabilityWhenIt(EntityDamageByEntityEvent e){
+        if(e.isCancelled()) return;
+
+        if(e.getEntity() instanceof Player player){
+            UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+            org.bukkit.inventory.meta.Damageable itemDamageable;
+            for (ItemStack itemStack : ugPlayer.getArmorAndOffHand()) {
+                itemDamageable = (org.bukkit.inventory.meta.Damageable) itemStack.getItemMeta();
+                itemDamageable.setDamage(itemDamageable.getDamage() + 1);
+            }
+        } else if(e.getDamager() instanceof Player player) {
+            ItemStack weap = player.getInventory().getItemInMainHand();
+            org.bukkit.inventory.meta.Damageable itemDamageable;
+            itemDamageable = (org.bukkit.inventory.meta.Damageable) weap.getItemMeta();
+            itemDamageable.setDamage(itemDamageable.getDamage() + 1);
         }
     }
 
@@ -128,5 +148,27 @@ public class CombatListener implements Listener {
         if(itemDamage + e.getDamage() >= e.getItem().getType().getMaxDurability()){
             e.setCancelled(true);
         }
+    }
+
+
+    @EventHandler
+    public void onRepairItem(PrepareAnvilEvent e){
+        AnvilInventory anvilInventory = e.getInventory();
+        if(anvilInventory.getSecondItem() != null) return;
+
+
+        ItemStack item = anvilInventory.getFirstItem();
+        UGItem ugItem = UGItem.getFromItemStack(item);
+        if(ugItem == null) return;
+
+        String itemType = item.getType().name().split("_")[0];
+
+        try{
+            ItemRepairTable itemRepairTable = ItemRepairTable.valueOf(itemType);
+
+            anvilInventory.setSecondItem(new ItemStack(Material.DIAMOND, 1));
+            anvilInventory.setResult(new ItemStack(Material.NETHERITE_INGOT, 10));
+
+        }catch (IllegalArgumentException ignore) {}
     }
 }
