@@ -6,7 +6,7 @@ import be.sixefyle.arena.pve.PveArena;
 import be.sixefyle.enums.ComponentColor;
 import be.sixefyle.enums.Stats;
 import be.sixefyle.enums.Symbols;
-import be.sixefyle.event.OnUgPlayerDieEvent;
+import be.sixefyle.event.UgPlayerDieEvent;
 import be.sixefyle.exception.PlayerNotExist;
 import be.sixefyle.group.Group;
 import be.sixefyle.items.*;
@@ -395,7 +395,7 @@ public class UGPlayer {
         setHealth(getMaxHealth());
         player.getActivePotionEffects().clear();
         player.setFireTicks(0);
-        Bukkit.getServer().getPluginManager().callEvent(new OnUgPlayerDieEvent(this, null, player.getLocation()));
+        Bukkit.getServer().getPluginManager().callEvent(new UgPlayerDieEvent(this, null, player.getLocation()));
     }
 
     public void respawn(){

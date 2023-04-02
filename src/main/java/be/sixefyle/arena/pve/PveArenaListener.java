@@ -2,7 +2,7 @@ package be.sixefyle.arena.pve;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
-import be.sixefyle.event.OnUgPlayerDieEvent;
+import be.sixefyle.event.UgPlayerDieEvent;
 import be.sixefyle.items.ItemManager;
 import be.sixefyle.items.UGItem;
 import org.bukkit.GameMode;
@@ -41,7 +41,7 @@ public class PveArenaListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerDie(OnUgPlayerDieEvent e){
+    public void onPlayerDie(UgPlayerDieEvent e){
         UGPlayer ugPlayer = e.getUgPlayer();
         Player player = ugPlayer.getPlayer();
         if(ugPlayer.isInArena()){

@@ -2,7 +2,7 @@ package be.sixefyle.listeners;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.enums.Stats;
-import be.sixefyle.event.OnPostDamageEvent;
+import be.sixefyle.event.PostDamageEvent;
 import be.sixefyle.items.UGItem;
 import org.bukkit.*;
 import org.bukkit.entity.*;
@@ -58,7 +58,7 @@ public class StatsListener implements Listener {
         }
         System.out.println("StatsListener.doPlayerAttack");
         System.out.println("finalDamage = " + finalDamage);
-        Bukkit.getPluginManager().callEvent(new OnPostDamageEvent(finalDamage, attacker, damaged, isCrit));
+        Bukkit.getPluginManager().callEvent(new PostDamageEvent(finalDamage, attacker, damaged, isCrit));
         e.setCancelled(true);
     }
 

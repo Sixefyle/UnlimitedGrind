@@ -4,8 +4,8 @@ import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.enums.Effects;
 import be.sixefyle.enums.Symbols;
-import be.sixefyle.event.OnPostDamageEvent;
-import be.sixefyle.event.OnUgPlayerDieEvent;
+import be.sixefyle.event.PostDamageEvent;
+import be.sixefyle.event.UgPlayerDieEvent;
 import be.sixefyle.items.ItemManager;
 import be.sixefyle.items.ItemRepairTable;
 import be.sixefyle.items.UGItem;
@@ -14,6 +14,7 @@ import be.sixefyle.utils.HologramUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -27,12 +28,11 @@ import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 
 public class CombatListener implements Listener {
     @EventHandler
-    public void onPlayerAttack(OnPostDamageEvent e){
+    public void onPlayerAttack(PostDamageEvent e){
         if(e.getDamage() <= 0) return;
 
         Damageable damaged = (Damageable) e.getTarget();
@@ -117,28 +117,36 @@ public class CombatListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerDie(OnUgPlayerDieEvent e){
+    public void onPlayerDie(UgPlayerDieEvent e){
         if(e.isCancelled()) return;
-
         e.getUgPlayer().respawn();
     }
 
     @EventHandler
     public void reduceDurabilityWhenIt(EntityDamageByEntityEvent e){
         if(e.isCancelled()) return;
+        int unbreakingLevel;
 
         if(e.getEntity() instanceof Player player){
             UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
             org.bukkit.inventory.meta.Damageable itemDamageable;
-            for (ItemStack itemStack : ugPlayer.getArmorAndOffHand()) {
-                itemDamageable = (org.bukkit.inventory.meta.Damageable) itemStack.getItemMeta();
-                itemDamageable.setDamage(itemDamageable.getDamage() + 1);
+            for (ItemStack armor : ugPlayer.getArmorAndOffHand()) {
+                unbreakingLevel = armor.getEnchantmentLevel(Enchantment.DURABILITY);
+                if(Math.random() > 1.0 / (unbreakingLevel + 1)){
+                    itemDamageable = (org.bukkit.inventory.meta.Damageable) armor.getItemMeta();
+                    itemDamageable.setDamage(itemDamageable.getDamage() + 1);
+                    armor.setItemMeta(itemDamageable);
+                }
             }
         } else if(e.getDamager() instanceof Player player) {
             ItemStack weap = player.getInventory().getItemInMainHand();
             org.bukkit.inventory.meta.Damageable itemDamageable;
-            itemDamageable = (org.bukkit.inventory.meta.Damageable) weap.getItemMeta();
-            itemDamageable.setDamage(itemDamageable.getDamage() + 1);
+            unbreakingLevel = weap.getEnchantmentLevel(Enchantment.DURABILITY);
+            if(Math.random() > 1.0 / (unbreakingLevel + 1)){
+                itemDamageable = (org.bukkit.inventory.meta.Damageable) weap.getItemMeta();
+                itemDamageable.setDamage(itemDamageable.getDamage() + 1);
+                weap.setItemMeta(itemDamageable);
+            }
         }
     }
 
@@ -148,27 +156,5 @@ public class CombatListener implements Listener {
         if(itemDamage + e.getDamage() >= e.getItem().getType().getMaxDurability()){
             e.setCancelled(true);
         }
-    }
-
-
-    @EventHandler
-    public void onRepairItem(PrepareAnvilEvent e){
-        AnvilInventory anvilInventory = e.getInventory();
-        if(anvilInventory.getSecondItem() != null) return;
-
-
-        ItemStack item = anvilInventory.getFirstItem();
-        UGItem ugItem = UGItem.getFromItemStack(item);
-        if(ugItem == null) return;
-
-        String itemType = item.getType().name().split("_")[0];
-
-        try{
-            ItemRepairTable itemRepairTable = ItemRepairTable.valueOf(itemType);
-
-            anvilInventory.setSecondItem(new ItemStack(Material.DIAMOND, 1));
-            anvilInventory.setResult(new ItemStack(Material.NETHERITE_INGOT, 10));
-
-        }catch (IllegalArgumentException ignore) {}
     }
 }

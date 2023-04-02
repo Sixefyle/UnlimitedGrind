@@ -1,7 +1,7 @@
 package be.sixefyle.event;
 
 import be.sixefyle.gui.AnvilGui;
-import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -10,19 +10,20 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
-public class PrepareAnvilCraftEvent extends Event implements Cancellable {
+public class AnvilCraftEvent extends Event implements Cancellable {
     private static final HandlerList HANDLERS = new HandlerList();
     private boolean isCancelled;
 
     private final Inventory inventory;
     private final AnvilGui anvilGui;
+    private final Player player;
 
     private final int inputSlot;
     private final int outputSlot;
     private final List<Integer> combinaisonSlots;
 
     private final ItemStack inputItem;
-    private ItemStack outputItem;
+    private final ItemStack outputItem;
     private final List<ItemStack> combinaisonItems;
 
 
@@ -35,9 +36,10 @@ public class PrepareAnvilCraftEvent extends Event implements Cancellable {
         return HANDLERS;
     }
 
-    public PrepareAnvilCraftEvent(Inventory inventory, AnvilGui anvilGui, int inputSlot, int outputSlot, List<Integer> combinaisonSlots, ItemStack inputItem, ItemStack outputItem, List<ItemStack> combinaisonItems) {
+    public AnvilCraftEvent(Inventory inventory, AnvilGui anvilGui, Player player, int inputSlot, int outputSlot, List<Integer> combinaisonSlots, ItemStack inputItem, ItemStack outputItem, List<ItemStack> combinaisonItems) {
         this.inventory = inventory;
         this.anvilGui = anvilGui;
+        this.player = player;
         this.inputSlot = inputSlot;
         this.outputSlot = outputSlot;
         this.combinaisonSlots = combinaisonSlots;
@@ -89,10 +91,7 @@ public class PrepareAnvilCraftEvent extends Event implements Cancellable {
         return anvilGui;
     }
 
-    public void setOutputItem(ItemStack outputItem) {
-        inventory.setItem(outputSlot, outputItem);
-        this.outputItem = outputItem;
-
-        anvilGui.setResultPreviewState(outputItem != null && (!outputItem.equals(anvilGui.getEmptyOutputItem()) && !outputItem.getType().equals(Material.AIR)));
+    public Player getPlayer() {
+        return player;
     }
 }

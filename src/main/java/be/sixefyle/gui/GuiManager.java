@@ -37,8 +37,11 @@ public class GuiManager implements Listener {
         Inventory inventory = e.getInventory();
         Player player = (Player) e.getPlayer();
         if(inventory.getHolder() != null && inventory.getHolder() instanceof BlockGui blockGui){
+            ItemStack itemStack;
             ItemMeta itemMeta;
-            for (ItemStack itemStack : inventory) {
+            for (int i = 0; i < inventory.getSize(); i++) {
+                if(i == blockGui.getOutputSlot()) continue;
+                itemStack = inventory.getItem(i);
                 if(itemStack == null) continue;
                 itemMeta = itemStack.getItemMeta();
 

@@ -5,7 +5,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 
-public class OnPostDamageEvent extends Event {
+public class PostDamageEvent extends Event {
     private static final HandlerList HANDLERS = new HandlerList();
 
     private double damage;
@@ -13,7 +13,7 @@ public class OnPostDamageEvent extends Event {
     private Entity damaged;
     private boolean isCrit;
 
-    public OnPostDamageEvent(double damage, Entity attacker, Entity damaged, boolean isCrit) {
+    public PostDamageEvent(double damage, Entity attacker, Entity damaged, boolean isCrit) {
         this.damage = damage;
         this.attacker = attacker;
         this.damaged = damaged;

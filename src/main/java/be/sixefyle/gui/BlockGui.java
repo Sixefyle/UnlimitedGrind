@@ -14,6 +14,8 @@ import org.jetbrains.annotations.NotNull;
 public abstract class BlockGui implements InventoryHolder{
 
     private final Inventory inventory;
+    private int inputSlot;
+    private int outputSlot;
 
     public BlockGui(int size, String title) {
         this.inventory = Bukkit.createInventory(this, size, Component.text(title));
@@ -30,6 +32,22 @@ public abstract class BlockGui implements InventoryHolder{
     public abstract void onInventoryClick(InventoryClickEvent e);
 
     public abstract void onDragItem(InventoryDragEvent e);
+
+    public int getInputSlot() {
+        return inputSlot;
+    }
+
+    public void setInputSlot(int inputSlot) {
+        this.inputSlot = inputSlot;
+    }
+
+    public int getOutputSlot() {
+        return outputSlot;
+    }
+
+    public void setOutputSlot(int outputSlot) {
+        this.outputSlot = outputSlot;
+    }
 
     public void createBackground(){
         ItemStack pane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);

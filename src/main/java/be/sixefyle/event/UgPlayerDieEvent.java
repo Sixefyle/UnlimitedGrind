@@ -3,16 +3,11 @@ package be.sixefyle.event;
 import be.sixefyle.UGPlayer;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import org.bukkit.event.inventory.InventoryAction;
-import org.bukkit.inventory.ItemStack;
 
-import java.util.List;
-
-public class OnUgPlayerDieEvent extends Event implements Cancellable {
+public class UgPlayerDieEvent extends Event implements Cancellable {
     private static final HandlerList HANDLERS = new HandlerList();
     private boolean isCancelled = false;
 
@@ -29,7 +24,7 @@ public class OnUgPlayerDieEvent extends Event implements Cancellable {
         return HANDLERS;
     }
 
-    public OnUgPlayerDieEvent(UGPlayer ugPlayer, Entity killer, Location loc) {
+    public UgPlayerDieEvent(UGPlayer ugPlayer, Entity killer, Location loc) {
         this.ugPlayer = ugPlayer;
         this.killer = killer;
         this.loc = loc;

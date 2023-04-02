@@ -8,7 +8,7 @@ public enum ItemRepairTable {
     GOLDEN(Material.GOLD_ORE, 7),
     IRON(Material.IRON_BLOCK, 25),
     CHAINMAIL(Material.IRON_INGOT, 11),
-    DIAMOND(Material.DEEPSLATE_DIAMOND_ORE, 45),
+    DIAMOND(Material.DEEPSLATE_DIAMOND_ORE, 18),
     NETHERITE(Material.NETHERITE_INGOT, 25),
     ;
 

@@ -1,8 +1,10 @@
 package be.sixefyle.utils;
 
+import be.sixefyle.enums.ComponentColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.TextDecoration;
 
 import java.util.List;
 
@@ -31,5 +33,9 @@ public class ComponentUtils {
         return Component.text(separator)
                 .hoverEvent(HoverEvent.showText(Component.empty()))
                 .clickEvent(ClickEvent.runCommand(""));
+    }
+
+    public static Component createComponent(String text, ComponentColor color){
+        return Component.text(text).color(color.getColor()).decoration(TextDecoration.ITALIC, false);
     }
 }
