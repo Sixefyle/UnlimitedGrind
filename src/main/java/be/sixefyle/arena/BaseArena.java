@@ -22,7 +22,7 @@ public abstract class BaseArena {
         this.worldUUID = worldUUID;
     }
 
-    public abstract void setupArena(double power);
+    public abstract void setupArena(double power, int startingWave);
 
     public String getWorldName(){
         return "arena_" + getWorldUUID();

@@ -43,10 +43,3 @@ commands:
     permission: ug.player
     permission-message: You do not have permission!
     usage: /group help
-  iridiumskyblock:
-    description: Group commands
-    aliases:
-      - is
-    permission: ug.player
-    permission-message: You do not have permission!
-    usage: /group help

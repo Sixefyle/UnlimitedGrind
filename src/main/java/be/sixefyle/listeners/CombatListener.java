@@ -34,8 +34,8 @@ public class CombatListener implements Listener {
     @EventHandler
     public void onPlayerAttack(PostDamageEvent e){
         if(e.getDamage() <= 0) return;
+        if(!(e.getTarget() instanceof Damageable damaged)) return;
 
-        Damageable damaged = (Damageable) e.getTarget();
         damaged.damage(e.getDamage());
 
         Location damageIndicatorLoc = e.getTarget().getLocation().clone();
@@ -106,7 +106,7 @@ public class CombatListener implements Listener {
                     entity.getWorld().dropItemNaturally(entity.getLocation(), drop);
                 }
             }
-            if(Math.random() <= .1){//TODO: add this to config
+            if(Math.random() <= .001){//TODO: add this to config
                 UGItem rareItem = ItemManager.generateRandomItem(entity.getMetadata("power").get(0).asDouble());
 
                 Item item = entity.getWorld().dropItemNaturally(entity.getLocation(), rareItem.asItemStack());
@@ -131,19 +131,26 @@ public class CombatListener implements Listener {
             UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
             org.bukkit.inventory.meta.Damageable itemDamageable;
             for (ItemStack armor : ugPlayer.getArmorAndOffHand()) {
+                if(armor == null) continue;
+                itemDamageable = (org.bukkit.inventory.meta.Damageable) armor.getItemMeta();
+                if(itemDamageable == null) return;
+                if(itemDamageable.getDamage() <= 0) continue;
+
                 unbreakingLevel = armor.getEnchantmentLevel(Enchantment.DURABILITY);
-                if(Math.random() > 1.0 / (unbreakingLevel + 1)){
-                    itemDamageable = (org.bukkit.inventory.meta.Damageable) armor.getItemMeta();
+                if(Math.random() < 1.0 / (unbreakingLevel + 1)){
                     itemDamageable.setDamage(itemDamageable.getDamage() + 1);
                     armor.setItemMeta(itemDamageable);
                 }
             }
         } else if(e.getDamager() instanceof Player player) {
             ItemStack weap = player.getInventory().getItemInMainHand();
-            org.bukkit.inventory.meta.Damageable itemDamageable;
+
+            org.bukkit.inventory.meta.Damageable itemDamageable = (org.bukkit.inventory.meta.Damageable) weap.getItemMeta();
+            if(itemDamageable == null) return;
+            if(itemDamageable.getDamage() <= 0) return;
+
             unbreakingLevel = weap.getEnchantmentLevel(Enchantment.DURABILITY);
-            if(Math.random() > 1.0 / (unbreakingLevel + 1)){
-                itemDamageable = (org.bukkit.inventory.meta.Damageable) weap.getItemMeta();
+            if(Math.random() < 1.0 / (unbreakingLevel + 1)){
                 itemDamageable.setDamage(itemDamageable.getDamage() + 1);
                 weap.setItemMeta(itemDamageable);
             }

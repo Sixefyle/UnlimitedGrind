@@ -103,7 +103,6 @@ public class DeadlyLink extends ItemPassif implements OnMeleeHit, Stackable {
                     .filter(ent -> ent instanceof Monster)
                     .toList();
 
-            livingEntities.add((LivingEntity) e.getEntity());
             LivingEntity currentEntity;
             int i = 0;
             int playerAmount = 0;

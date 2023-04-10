@@ -17,7 +17,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
-import org.bukkit.entity.Damageable;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.enchantments.EnchantmentOffer;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -27,6 +28,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDispenseArmorEvent;
 import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.event.enchantment.EnchantItemEvent;
+import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
@@ -35,6 +37,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class BasicListeners implements Listener {
@@ -201,7 +205,7 @@ public class BasicListeners implements Listener {
         if(ugPlayer.canEquipItem(newItem)){
             ugPlayer.updateWearedPower(newItem, oldItem, ItemAction.HOLD);
             ugPlayer.updateStatsFromItem(newItem, oldItem, ItemAction.HOLD);
-        } else {
+        } else if(newItem.getItemCategories().equals(ItemCategory.MELEE) || newItem.getItemCategories().equals(ItemCategory.DISTANCE)) {
             e.setCancelled(true);
             player.sendMessage(
                     Component.text(UnlimitedGrind.getInstance().getConfig().getString("lang.item.error.notEnoughPower"))
@@ -270,7 +274,6 @@ public class BasicListeners implements Listener {
         UGItem ugNewItem = UGItem.getFromItemStack(newItem);
         UGItem ugOldItem = UGItem.getFromItemStack(oldItem);
 
-
         if(ugPlayer.canEquipItem(ugNewItem)) {
             ugPlayer.updateStatsFromItem(ugNewItem, ugOldItem, ItemAction.EQUIP);
             ugPlayer.updateEquippedWearedPower();
@@ -306,11 +309,6 @@ public class BasicListeners implements Listener {
     @EventHandler
     public void onBlockDispenseArmor(BlockDispenseArmorEvent e){
         e.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onDrinkPotion(EntityPotionEffectEvent e){
-
     }
 
     @EventHandler
@@ -368,5 +366,48 @@ public class BasicListeners implements Listener {
                 ugItem.updateLore();
             }
         }
+    }
+
+    private Enchantment getRandomEnchant(ItemStack item, List<Enchantment> excludedEnchants){
+        excludedEnchants.add(Enchantment.MENDING);
+
+        Enchantment enchant;
+        @NotNull Enchantment[] values = Enchantment.values();
+        do {
+            enchant = values[(int) (Math.random() * values.length)];
+        }while (!enchant.canEnchantItem(item) && !excludedEnchants.contains(enchant));
+        return enchant;
+    }
+
+    @EventHandler
+    public void changeEnchantLevelCost(PrepareItemEnchantEvent e){
+        for (EnchantmentOffer offer : e.getOffers()) {
+            if(offer == null) continue;
+            if(offer.getEnchantment().equals(Enchantment.KNOCKBACK) ||
+            offer.getEnchantment().equals(Enchantment.ARROW_KNOCKBACK)) {
+                offer.setEnchantment(getRandomEnchant(e.getItem(), List.of(Enchantment.KNOCKBACK, Enchantment.ARROW_KNOCKBACK)));
+            }
+
+            offer.setCost(offer.getCost() * 2);
+        }
+    }
+
+    @EventHandler
+    public void onEnchant(EnchantItemEvent e){
+        if(e.isCancelled()) return;
+
+        Player player = e.getEnchanter();
+        int levelCost = e.getExpLevelCost();
+        int baseLevelCost = e.whichButton() + 1;
+
+        Map<Enchantment, Integer> enchantsToAdd = e.getEnchantsToAdd();
+        if(enchantsToAdd.containsKey(Enchantment.KNOCKBACK) || enchantsToAdd.containsKey(Enchantment.ARROW_KNOCKBACK)){
+            enchantsToAdd.remove(Enchantment.KNOCKBACK);
+            enchantsToAdd.remove(Enchantment.ARROW_KNOCKBACK);
+            Enchantment enchantToReplace = getRandomEnchant(e.getItem(), List.of(Enchantment.KNOCKBACK, Enchantment.ARROW_KNOCKBACK));
+
+            enchantsToAdd.put(enchantToReplace, 1);
+        }
+        player.giveExpLevels(-levelCost + baseLevelCost);
     }
 }

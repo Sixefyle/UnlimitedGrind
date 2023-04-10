@@ -1,12 +1,9 @@
 package be.sixefyle.arena;
 
-import be.sixefyle.UGPlayer;
-import be.sixefyle.group.Group;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import org.apache.commons.io.FileUtils;
 import org.bukkit.*;
-import org.bukkit.entity.Player;
 
 import java.io.*;
 import java.util.UUID;

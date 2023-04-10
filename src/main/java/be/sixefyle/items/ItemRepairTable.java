@@ -4,7 +4,8 @@ import org.bukkit.Material;
 
 public enum ItemRepairTable {
     WOOD(Material.OAK_PLANKS, 10),
-    STONE(Material.ANDESITE, 18),
+    LEATHER(Material.LEATHER, 3),
+    STONE(Material.STONE, 18),
     GOLDEN(Material.GOLD_ORE, 7),
     IRON(Material.IRON_BLOCK, 25),
     CHAINMAIL(Material.IRON_INGOT, 11),

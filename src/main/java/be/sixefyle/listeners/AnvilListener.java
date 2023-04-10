@@ -70,20 +70,22 @@ public class AnvilListener implements Listener {
             ItemStack requiredItem = ItemStackUtils.createItem(itemRepairTable.getComponent(),
                     Component.text(" "),
                     List.of(
-                            ComponentUtils.createComponent("Needed item to repair: " + itemRepairTable.getComponent(), ComponentColor.NEUTRAL),
+                            ComponentUtils.createComponent("Needed item to repair: " + itemRepairTable.getComponent(),
+                                    ComponentColor.NEUTRAL),
                             ComponentUtils.createComponent("Repair power: ", ComponentColor.NEUTRAL)
-                                    .append(ComponentUtils.createComponent(String.valueOf(itemRepairTable.getRepairPower()), ComponentColor.FINE))
+                                    .append(ComponentUtils.createComponent(String.valueOf(itemRepairTable.getRepairPower()),
+                                            ComponentColor.FINE))
                     ));
             e.getInventory().setItem(slot, requiredItem);
         } catch (IllegalArgumentException ignore) {}
     }
 
-    @EventHandler(priority = EventPriority.LOW)
+    @EventHandler
     public void onPrepareRepairItem(PrepareAnvilCraftEvent e){
         if(e.isCancelled()) return;
 
         AnvilGui anvilGui = e.getAnvilGui();
-        ItemStack item = e.getInputItem();
+        ItemStack item = !e.getOutputItem().equals(anvilGui.getEmptyOutputItem()) ? e.getOutputItem() : e.getInputItem();
         List<ItemStack> combinaisonsItem = e.getCombinaisonItems();
 
         UGItem ugItem = UGItem.getFromItemStack(item);
@@ -119,12 +121,13 @@ public class AnvilListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOW)
     public void onPrepareEnchantItem(PrepareAnvilCraftEvent e){
         if(e.isCancelled()) return;
+        e.setOutputItem(e.getAnvilGui().getEmptyOutputItem());
 
         AnvilGui anvilGui = e.getAnvilGui();
-        ItemStack item = !e.getOutputItem().equals(anvilGui.getEmptyOutputItem()) ? e.getOutputItem() : e.getInputItem();
+        ItemStack item = e.getInputItem();
         if(item == null) return;
         ItemStack outputItem = item.clone();
 

@@ -3,13 +3,18 @@ package be.sixefyle.gui;
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
 import be.sixefyle.arena.ArenaMap;
+import be.sixefyle.arena.pve.ArenaManager;
+import be.sixefyle.enums.ComponentColor;
 import be.sixefyle.utils.PlaceholderUtils;
 import com.iridium.iridiumcore.dependencies.iridiumcolorapi.IridiumColorAPI;
 import com.iridium.iridiumcore.utils.InventoryUtils;
 import com.iridium.iridiumskyblock.IridiumSkyblock;
+import com.iridium.iridiumskyblock.database.Island;
+import com.iridium.iridiumskyblock.database.IslandBank;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
@@ -24,10 +29,11 @@ public class ArenaGui extends UGGui {
 
     private UGPlayer ugPlayer;
     private double currentPower;
+    private int startingWave = 1;
     private ArenaMap arenaMap;
 
     public ArenaGui(UGPlayer ugPlayer) {
-        super(9, "Arena");
+        super(18, "Arena");
 
         this.ugPlayer = ugPlayer;
         currentPower = ugPlayer.getMaxPower() - ugPlayer.getMaxPower() % 100;
@@ -40,15 +46,18 @@ public class ArenaGui extends UGGui {
         Material itemType = e.getCurrentItem().getType();
         String beginPath = "lang.arena.gui.";
         String errorMessage = null;
+        Player player = (Player) e.getWhoClicked();
 
         Material[] icons = {
                 Material.getMaterial(config.getString(beginPath + "powerUpgrade.material")),
                 Material.getMaterial(config.getString(beginPath + "startButton.material")),
                 Material.getMaterial(config.getString(beginPath + "mapChange.material")),
+                Material.getMaterial(config.getString(beginPath + "startingWave.material")),
         };
 
+        boolean isShiftClick = e.getClick().isShiftClick();
         if(itemType.equals(icons[0])) { // Power upgrade
-            if(e.isShiftClick()){
+            if(isShiftClick){
                 if (e.isLeftClick()){
                     addPower(-50);
                 } else if(e.isRightClick()){
@@ -62,7 +71,28 @@ public class ArenaGui extends UGGui {
                 }
             }
         } else if(itemType.equals(icons[1])) { // start button
-            ugPlayer.joinArena(arenaMap, currentPower);
+            if(ugPlayer.getUgIsland().getIsland().isPresent()){
+                Island island = ugPlayer.getUgIsland().getIsland().get();
+                double crystalCost = ArenaManager.getCrystalReward(currentPower, startingWave == 1 ? 1 : startingWave + 10);
+                if(island.getCrystals() >= crystalCost){
+                    IslandBank islandBank = IridiumSkyblock.getInstance().getIslandManager().getIslandBank(island, IridiumSkyblock.getInstance().getBankItems().crystalsBankItem);
+                    islandBank.setNumber(islandBank.getNumber() - crystalCost);
+                    ugPlayer.joinArena(arenaMap, currentPower, startingWave);
+                } else {
+                    player.sendMessage(Component.text("You don't have enough crystals to start this arena!")
+                            .color(ComponentColor.ERROR.getColor()));
+                }
+            } else {
+                player.sendMessage(Component.text("You need to have an island to start an arena!")
+                        .color(ComponentColor.ERROR.getColor()));
+            }
+
+        } else if(itemType.equals(icons[3])) { // starting wave
+            if(isShiftClick) {
+                startingWave = Math.max(startingWave - 5, 1);
+            } else {
+                startingWave += 5;
+            }
         }
     }
 
@@ -119,5 +149,9 @@ public class ArenaGui extends UGGui {
 
     public double getCurrentPower() {
         return currentPower;
+    }
+
+    public int getStartingWave() {
+        return startingWave;
     }
 }

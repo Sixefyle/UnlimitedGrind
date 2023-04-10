@@ -25,7 +25,7 @@ public class PveArena extends BaseArena {
     }
 
     @Override
-    public void setupArena(double power){
+    public void setupArena(double power, int startingWave){
         World world = WorldManager.createArenaMap(getWorldUUID(), getArenaMap());
         if(world != null) {
             if(group == null){
@@ -39,6 +39,7 @@ public class PveArena extends BaseArena {
                 ugPlayer.setArena(this);
             }
             teleportPlayers();
+            arenaManager.setCurrentWave(startingWave);
             arenaManager.startGame();
         }
     }
@@ -56,10 +57,12 @@ public class PveArena extends BaseArena {
     }
 
     public void quit(UGPlayer ugPlayer){
+        ugPlayer.setArena(null);
+        if(arenaManager == null) return;
+
         arenaManager.reducePlayerAlive();
         arenaManager.sendRewards(ugPlayer);
         arenaManager.getBossBar().removePlayer(ugPlayer.getPlayer());
-        ugPlayer.setArena(null);
     }
 
     public ArenaManager getArenaManager() {

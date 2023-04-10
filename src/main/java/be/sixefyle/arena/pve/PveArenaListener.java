@@ -2,9 +2,13 @@ package be.sixefyle.arena.pve;
 
 import be.sixefyle.UGPlayer;
 import be.sixefyle.UnlimitedGrind;
+import be.sixefyle.entity.boss.UGBoss;
+import be.sixefyle.enums.ComponentColor;
 import be.sixefyle.event.UgPlayerDieEvent;
 import be.sixefyle.items.ItemManager;
 import be.sixefyle.items.UGItem;
+import com.jeff_media.armorequipevent.ArmorEquipEvent;
+import net.kyori.adventure.text.Component;
 import org.bukkit.GameMode;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.*;
@@ -19,7 +23,14 @@ public class PveArenaListener implements Listener {
     @EventHandler
     public void onEntityDie(EntityDeathEvent e){
         Entity entity = e.getEntity();
-        if(entity.hasMetadata("world") && entity.hasMetadata("power") && entity.hasMetadata("wave")){
+        if(entity.hasMetadata("arenaWorld")){
+
+            if(entity.hasMetadata("parent")){
+                e.getDrops().clear();
+                e.setDroppedExp(0);
+                return;
+            }
+
             ArenaManager arenaManager = ArenaManager.getArenaManagers().get(entity.getWorld());
             arenaManager.getWave().getAliveCreatures().remove(entity);
             e.getDrops().clear();
@@ -36,6 +47,11 @@ public class PveArenaListener implements Listener {
 
                 Item item = entity.getWorld().dropItemNaturally(entity.getLocation(), rareItem.asItemStack());
                 rareItem.createRarityParticle(item);
+            }
+
+            if(entity.hasMetadata("ugBoss")){
+                UGBoss ugBoss = (UGBoss) entity.getMetadata("ugBoss").get(0).value();
+                ugBoss.onDie();
             }
         }
     }
@@ -59,7 +75,7 @@ public class PveArenaListener implements Listener {
     @EventHandler
     public void onCreatureTakeDamage(EntityDamageByEntityEvent e){
         Entity entity = e.getEntity();
-        if(entity.hasMetadata("world")){
+        if(entity.hasMetadata("arenaWorld")){
             if(e.getDamager() instanceof Mob){
                 e.setCancelled(true);
             } else if(e.getDamager() instanceof Player player && entity instanceof Mob creature){
@@ -70,14 +86,14 @@ public class PveArenaListener implements Listener {
 
     @EventHandler
     public void onCreatureChangeTarget(EntityTargetEvent e){
-        if(e.getEntity().hasMetadata("world") && e.getTarget() instanceof Mob){
+        if(e.getEntity().hasMetadata("arenaWorld") && e.getTarget() instanceof Mob){
             e.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onCreatureTransform(EntityTransformEvent e){
-        if(e.getEntity().hasMetadata("world")){
+        if(e.getEntity().hasMetadata("arenaWorld")){
             e.setCancelled(true);
         }
     }
@@ -97,6 +113,30 @@ public class PveArenaListener implements Listener {
                     arenaManager.stopGame();
                 }
             }
+        }
+    }
+
+    @EventHandler
+    public void onEquipArmorInArena(ArmorEquipEvent e){
+        Player player = e.getPlayer();
+        UGPlayer ugPlayer = UGPlayer.GetUGPlayer(player);
+        if(ugPlayer.isInArena()){
+            e.setCancelled(true);
+            player.sendMessage(Component.text("You can't change your armor in arena!").color(ComponentColor.ERROR.getColor()));
+        }
+    }
+
+    @EventHandler
+    public void onMobAggroChange(EntityTargetLivingEntityEvent e){
+        Entity entity = e.getEntity();
+        Entity target = e.getTarget();
+        if(entity.hasMetadata("arenaWorld") && e.getTarget() == null && target instanceof Player player){
+            if(player.getGameMode().equals(GameMode.ADVENTURE) || player.getGameMode().equals(GameMode.SURVIVAL)){
+                ArenaManager arenaManager = ArenaManager.getArenaManagers().get(entity.getWorld());
+                e.setTarget(arenaManager.getWave().getNearestPlayer(entity.getLocation()).getPlayer());
+            }
+        } else {
+            e.setCancelled(true);
         }
     }
 }

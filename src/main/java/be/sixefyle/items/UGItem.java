@@ -114,11 +114,11 @@ public class UGItem {
             double weapAttackSpeed;
 
             if(!isNetherite){
-                weapDamage = NumberUtils.getRandomNumber(10, 20) + NumberUtils.getRandomNumber (power/88, power/84);//TODO: magic number
+                weapDamage = NumberUtils.getRandomNumber(5, 10) + NumberUtils.getRandomNumber (power/88, power/84);//TODO: magic number
                 weapStrength = NumberUtils.getRandomNumber(Math.pow(getPower(), .75), Math.pow(getPower(), .73));
                 weapAttackSpeed = NumberUtils.getRandomNumber(Stats.ATTACK_SPEED.getMin(), Stats.ATTACK_SPEED.getMax());
             } else {
-                weapDamage = NumberUtils.getRandomNumber(10, 20) + power/84;//TODO: magic number
+                weapDamage = 10 + power/84;//TODO: magic number
                 weapStrength = Math.pow(getPower(), .75);
                 weapAttackSpeed = Stats.ATTACK_SPEED.getMax();
             }
@@ -158,7 +158,7 @@ public class UGItem {
             double vitality;
             double strength;
 
-            if(!isNetherite){
+            if(isNetherite){
                 armorValue = Math.min(Math.pow(getPower(), 0.7812), Stats.ARMOR.getMax());
                 vitality = Math.pow(getPower(), .57);
                 strength = Math.pow(getPower(), .67);

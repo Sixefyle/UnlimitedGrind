@@ -19,9 +19,9 @@ import net.kyori.adventure.text.format.TextColor;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -243,7 +243,7 @@ public class UGPlayer {
             if(ugItem == null) continue;
             tempPower += ugItem.getPower();
         }
-        setWearedPower(tempPower / getEquippedItems().size());
+        setWearedPower(tempPower / 6);
         if(getWearedPower() > getMaxPower()){
             setMaxPower(getWearedPower());
         }
@@ -310,27 +310,10 @@ public class UGPlayer {
         throw new PlayerNotExist();
     }
 
-//    public double getArmorValue() {
-//        double armor = 0;
-//        ItemMeta itemMeta;
-//        for (ItemStack itemStack : getArmorAndOffHand()) {
-//            if(itemStack == null) continue;
-//
-//            itemMeta = itemStack.getItemMeta();
-//            if(itemMeta == null) continue;
-//            if(itemMeta.hasAttributeModifiers() && itemMeta.getAttributeModifiers(Attribute.GENERIC_ARMOR) != null){
-//                for (AttributeModifier attributeModifier : itemMeta.getAttributeModifiers(Attribute.GENERIC_ARMOR)) {
-//                    armor += attributeModifier.getAmount();
-//                }
-//            }
-//        }
-//        return armor;
-//    }
-
     public double getDamageReduction(){
         double playerArmor = getStatValue(Stats.ARMOR);
 
-        return (playerArmor / (playerArmor + 15000));
+        return (playerArmor / (playerArmor + 2500));
     }
 
     public double getDamageReductionPercentage(){
@@ -391,14 +374,21 @@ public class UGPlayer {
         isHealthLocked = healthLocked;
     }
 
+    public void clearEffects(){
+        for (PotionEffect activePotionEffect : player.getActivePotionEffects()) {
+            player.removePotionEffect(activePotionEffect.getType());
+        }
+        player.setFireTicks(0);
+    }
+
     public void kill(){
         setHealth(getMaxHealth());
-        player.getActivePotionEffects().clear();
-        player.setFireTicks(0);
+        clearEffects();
         Bukkit.getServer().getPluginManager().callEvent(new UgPlayerDieEvent(this, null, player.getLocation()));
     }
 
     public void respawn(){
+        clearEffects();
         if(ugIsland != null && ugIsland.getIsland().isPresent()) {
             Island island = ugIsland.getIsland().get();
             player.teleport(island.getHome());
@@ -452,16 +442,32 @@ public class UGPlayer {
     }
 
     public List<ItemStack> getArmorAndOffHand(){
-        List<ItemStack> armor = new ArrayList<>(Arrays.asList(player.getInventory().getArmorContents()));
+        List<ItemStack> toAdd = new ArrayList<>();
 
-        ItemStack handItem = player.getInventory().getItemInMainHand();
-        UGItem ugItem = UGItem.getFromItemStack(handItem);
-        if(ugItem != null && ugItem.getItemCategories().equals(ItemCategory.SHIELD) && canEquipItem(ugItem)){
-            armor.add(player.getInventory().getItemInMainHand());
+        Collections.addAll(toAdd, player.getInventory().getArmorContents());
+        toAdd.add(player.getInventory().getItemInOffHand());
+
+        List<ItemStack> toReturn = new ArrayList<>();
+
+        UGItem ugItem;
+        ItemStack tempArmor;
+        for (ItemStack armorContent : toAdd) {
+            if(armorContent == null) continue;
+            ugItem = UGItem.getFromItemStack(armorContent);
+            if(ugItem == null) continue;
+            if(canEquipItem(ugItem)){
+                toReturn.add(armorContent);
+            } else if(ugItem.getItemCategories().equals(ItemCategory.ARMOR) || ugItem.getItemCategories().equals(ItemCategory.SHIELD)) {
+                for (ItemStack armor : toAdd) {
+                    if (armor != null && armor.equals(armorContent)) {
+                        tempArmor = armor.clone();
+                        armor.setAmount(0);
+                        player.getInventory().addItem(tempArmor);
+                    }
+                }
+            }
         }
-
-        armor.add(player.getInventory().getItemInOffHand());
-        return armor;
+        return toReturn;
     }
 
     public List<ItemStack> getEquippedItems(){
@@ -470,25 +476,25 @@ public class UGPlayer {
         ItemStack handItem = player.getInventory().getItemInMainHand();
         UGItem ugItem = UGItem.getFromItemStack(handItem);
         if(ugItem != null && !ugItem.getItemCategories().equals(ItemCategory.ARMOR) && canEquipItem(ugItem)){
-            items.add(player.getInventory().getItemInMainHand());
+            items.add(handItem);
         }
         return items;
     }
 
     public void shouldAllowArmorChange(boolean bool){
-        ItemStack[] armor = player.getInventory().getArmorContents();
-
-        if(bool){
-            for (ItemStack armorContent : armor) {
-                if(armorContent == null) continue;
-                armorContent.removeEnchantment(Enchantment.BINDING_CURSE);
-            }
-        } else {
-            for (ItemStack armorContent : armor) {
-                if(armorContent == null) continue;
-                armorContent.addUnsafeEnchantment(Enchantment.BINDING_CURSE, 1);
-            }
-        }
+//        ItemStack[] armor = player.getInventory().getArmorContents();
+//
+//        if(bool){
+//            for (ItemStack armorContent : armor) {
+//                if(armorContent == null) continue;
+//                armorContent.removeEnchantment(Enchantment.BINDING_CURSE);
+//            }
+//        } else {
+//            for (ItemStack armorContent : armor) {
+//                if(armorContent == null) continue;
+//                armorContent.addUnsafeEnchantment(Enchantment.BINDING_CURSE, 1);
+//            }
+//        }
     }
 
     public void setupStatsFromEquippedItems(){
@@ -497,7 +503,9 @@ public class UGPlayer {
             if(item == null) continue;
             ugItem = UGItem.getFromItemStack(item);
             if(ugItem == null) continue;
-            ugItem.getStatsMap().forEach(this::addStatValue);
+            if(canEquipItem(ugItem)){
+                ugItem.getStatsMap().forEach(this::addStatValue);
+            }
         }
         double healthPerc = player.getHealth()/player.getHealthScale();
         setHealthFromStat();
@@ -533,7 +541,7 @@ public class UGPlayer {
     }
 
     public void setStatValue(Stats stat, double value) {
-        statsMap.replace(stat, value);
+        statsMap.replace(stat, Math.max(value, 0));
     }
 
     public void addStatValue(Stats stat, double toAdd){
@@ -542,7 +550,7 @@ public class UGPlayer {
         }
     }
 
-    public void joinArena(ArenaMap arenaMap, double power){
+    public void joinArena(ArenaMap arenaMap, double power, int startingWave){
         if(hasGroup() && !getGroup().getOwner().equals(this)) return;
         if(isInArena()) return;
 
@@ -551,7 +559,7 @@ public class UGPlayer {
         } else {
             this.arena = new PveArena(this, arenaMap);
         }
-        this.arena.setupArena(power);
+        this.arena.setupArena(power, startingWave);
         shouldAllowArmorChange(false);
         player.setGameMode(GameMode.ADVENTURE);
     }

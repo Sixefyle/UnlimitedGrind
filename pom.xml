@@ -59,12 +59,12 @@
             <url>https://nexus.iridiumdevelopment.net/repository/maven-releases/</url>
         </repository>
         <repository>
-            <id>codemc-repo</id>
-            <url>https://repo.codemc.io/repository/maven-public/</url>
-        </repository>
-        <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>codemc-repo</id>
+            <url>https://repo.codemc.io/repository/maven-public/</url>
         </repository>
         <repository>
             <id>dmulloy2-repo</id>
@@ -133,15 +133,15 @@
             <version>1.3.2</version>
         </dependency>
         <dependency>
-            <groupId>io.github.skytasul</groupId>
-            <artifactId>glowingentities</artifactId>
-            <version>1.1.3</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>com.jeff_media</groupId>
             <artifactId>ArmorEquipEvent</artifactId>
             <version>1.0.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.skytasul</groupId>
+            <artifactId>glowingentities</artifactId>
+            <version>1.2.0</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>net.minecraft</groupId>

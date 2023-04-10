@@ -5,7 +5,7 @@ public enum Symbols {
     PLAYER("🔥"),
     POWER("⚔"),
     HEALTH("❤"),
-    COIN("○"),
+    COIN("ↂ"),
     CRYSTALS("⟡"),
     CRITICS("⚡"),
     ENCHANTS("☄"),

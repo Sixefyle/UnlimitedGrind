@@ -3,17 +3,12 @@ package be.sixefyle;
 import be.sixefyle.arena.WorldManager;
 import be.sixefyle.arena.pve.PveArenaListener;
 import be.sixefyle.commands.*;
+import be.sixefyle.entity.boss.BossListener;
 import be.sixefyle.enums.Symbols;
 import be.sixefyle.gui.GuiManager;
 import be.sixefyle.items.ItemManager;
 import be.sixefyle.listeners.*;
-import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.ProtocolManager;
-import com.comphenix.protocol.events.ListenerPriority;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
 import com.google.common.collect.ImmutableMap;
 import com.iridium.iridiumcore.Item;
 import com.iridium.iridiumcore.dependencies.xseries.XMaterial;
@@ -27,9 +22,8 @@ import fr.skytasul.glowingentities.GlowingEntities;
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
-import org.bukkit.command.*;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.entity.Boss;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -43,13 +37,13 @@ public class UnlimitedGrind extends JavaPlugin {
     }
     private static Economy econ = null;
     private static HolographicDisplaysAPI holoApi = null;
-    private ProtocolManager protocolManager;
     private static GlowingEntities glowingEntities;
+    private static ProtocolListener protocolListener;
 
     @Override
     public void onEnable() {
         super.onEnable();
-        protocolManager = ProtocolLibrary.getProtocolManager();
+        protocolListener = new ProtocolListener(ProtocolLibrary.getProtocolManager());
         initConfig();
         initHologramAPI();
         initGlowingApi();
@@ -72,6 +66,7 @@ public class UnlimitedGrind extends JavaPlugin {
         pluginManager.registerEvents(new IslandListener(), this);
         pluginManager.registerEvents(new AnvilListener(), this);
         pluginManager.registerEvents(new GuiManager(), this);
+        pluginManager.registerEvents(new BossListener(), this);
 
         getCommand("ugreload").setExecutor(new ReloadCommand());
         getCommand("power").setExecutor(new PowerCommand());
@@ -84,19 +79,6 @@ public class UnlimitedGrind extends JavaPlugin {
 
         initNewUpgrade();
         initNewMenuIcons();
-
-        //Hearth damage indicator disabler
-        protocolManager.addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Server.WORLD_PARTICLES) {
-            @Override
-            public void onPacketSending(PacketEvent event) {
-                PacketContainer packet = event.getPacket();
-                if (event.getPacketType() != PacketType.Play.Server.WORLD_PARTICLES)
-                    return;
-
-                if (packet.getNewParticles().read(0).getParticle() == Particle.DAMAGE_INDICATOR)
-                    event.setCancelled(true);
-            }
-        });
     }
 
     @Override
@@ -248,6 +230,8 @@ public class UnlimitedGrind extends JavaPlugin {
         config.set("lang.arena.gui.startButton.lore", new ArrayList<>() {{
             add("");
             add("&7Power: &c%power%");
+            add("&7Start wave: &e%startWave%");
+            add("&7Crystal cost: &a%skipWaveCost%");
             add("");
             add("&7Creature Health: &a%creatureHealth%%");
             add("&7Creature Damage: &c%creatureDamage%%");
@@ -260,6 +244,18 @@ public class UnlimitedGrind extends JavaPlugin {
         config.set("lang.arena.gui.mapChange.name", "&cChange Map");
         config.set("lang.arena.gui.mapChange.lore", new ArrayList<>() {{
             add("&cWIP.");
+        }});
+
+        config.set("lang.arena.gui.startingWave.material", Material.CLOCK.name());
+        config.set("lang.arena.gui.startingWave.pos", 13);
+        config.set("lang.arena.gui.startingWave.name", "&eStarting Wave");
+        config.set("lang.arena.gui.startingWave.lore", new ArrayList<>() {{
+            add("");
+            add("&7Starting Wave: &c%startWave%");
+            add("&7Crystals Cost: &a%skipWaveCost%");
+            add("");
+            add("&eClick to add 5 waves");
+            add("&cHold SHIFT to decrease");
         }});
 
         config.addDefault("lang.item.error.notEnoughPower", "You need more power to equip this item!");
@@ -333,8 +329,8 @@ public class UnlimitedGrind extends JavaPlugin {
             add("Who need health if they can't hit you...");
         }});
 
-        config.set("pve.arena.rareDropChance", 0.03);
-        config.set("pve.arena.perWaveRareDropChanceIncrease", 0.002); // 1 wave = 0.2% added to rare drop chance
+        config.set("pve.arena.rareDropChance", 0.01);
+        config.set("pve.arena.perWaveRareDropChanceIncrease", 0.0001); // 1 wave = 0.01% added to rare drop chance
 
         config.options().copyDefaults(true);
         saveConfig();
@@ -408,7 +404,7 @@ public class UnlimitedGrind extends JavaPlugin {
         return holoApi;
     }
 
-    public static GlowingEntities getGlowingEntities() {
+    public GlowingEntities getGlowingEntities() {
         return glowingEntities;
     }
 }

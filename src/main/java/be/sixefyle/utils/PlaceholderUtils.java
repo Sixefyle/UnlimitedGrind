@@ -2,6 +2,7 @@ package be.sixefyle.utils;
 
 import be.sixefyle.UGSpawner;
 import be.sixefyle.UGPlayer;
+import be.sixefyle.arena.pve.ArenaManager;
 import be.sixefyle.enums.Symbols;
 import be.sixefyle.gui.ArenaGui;
 import be.sixefyle.items.passifs.ItemPassif;
@@ -31,8 +32,8 @@ public class PlaceholderUtils {
         s = s.replaceAll("%silence%", betterSpawner.isSilence() ? "&aEnable" : "&cDisable");
 
         s = s.replaceAll("%powerUpgradeCost%", NumberUtils.format(UGSpawner.getUgradePrice(power, 10)));
-        s = s.replaceAll("%powerUpgradeCost100%", NumberUtils.format(UGSpawner.getUgradePrice(power, 100)));
-        s = s.replaceAll("%powerUpgradeCost1000%", NumberUtils.format(UGSpawner.getUgradePrice(power, 1000)));
+        s = s.replaceAll("%powerUpgradeCost100%", NumberUtils.format(UGSpawner.getUgradePrice(power, 50)));
+        s = s.replaceAll("%powerUpgradeCost1000%", NumberUtils.format(UGSpawner.getUgradePrice(power, 100)));
 
         s = s.replaceAll("%minTime%", String.valueOf(betterSpawner.getSpawner().getMinSpawnDelay()));
         s = s.replaceAll("%maxTime%", String.valueOf(betterSpawner.getSpawner().getMaxSpawnDelay()));
@@ -102,6 +103,13 @@ public class PlaceholderUtils {
         s = s.replaceAll("%power%", String.format(Locale.ENGLISH, "%,.0f", power));
         s = s.replaceAll("%creatureHealth%", String.format(Locale.ENGLISH, "%,.0f", 100+((power/50)*(Math.pow(power,.78)/100+1)) * 100)); // TODO: create class to store this to one place
         s = s.replaceAll("%creatureDamage%", String.format(Locale.ENGLISH, "%,.0f", 100+(power/80) * 100));
+
+        int startingWave = arenaGui.getStartingWave() == 1 ? 1 : arenaGui.getStartingWave() + 10;
+
+        s = s.replaceAll("%startWave%", String.valueOf(arenaGui.getStartingWave()));
+        s = s.replaceAll("%skipWaveCost%",
+                NumberUtils.format(ArenaManager.getCrystalReward(arenaGui.getCurrentPower(), startingWave))
+                        + " " + Symbols.CRYSTALS.get());
 
         if(ugPlayer.hasGroup()){
             StringBuilder stringBuilder = new StringBuilder("&7Group: ");
